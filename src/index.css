@@ -1,0 +1,65 @@
+/* Global minimal : variables du thème clair + reset. Tout le reste est en CSS Modules. */
+:root {
+  --bg: #f5f6fb;
+  --surface: #ffffff;
+  --surface-2: #f1f2f9;
+  --border: #e4e6f0;
+  --border-strong: #c9cde0;
+  --text: #121433;
+  --text-muted: #5b5f7e;
+  --text-faint: #9a9db8;
+  --accent: #6355f6;
+  --accent-2: #a855f7;
+  --accent-hover: #5245e8;
+  --accent-soft: rgba(99, 85, 246, 0.1);
+  --gradient: linear-gradient(135deg, #6355f6 0%, #a855f7 100%);
+  --danger: #e11d48;
+  --danger-soft: rgba(225, 29, 72, 0.07);
+  --warning: #c2570c;
+  --warning-soft: rgba(245, 158, 11, 0.1);
+  --success: #059669;
+  --success-soft: rgba(16, 185, 129, 0.08);
+  --ts: #2f7df6;
+  --cs: #a855f7;
+  --code-bg: #fafaff;
+  --code-text: #23264a;
+  --shadow: 0 1px 2px rgba(18, 20, 51, 0.04), 0 8px 24px -12px rgba(18, 20, 51, 0.12);
+  --radius: 10px;
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

@@ -1,0 +1,175 @@
+/* Desktop : l'app tient dans la hauteur de l'écran, les colonnes défilent en interne si besoin. */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px 12px;
+}
+
+/* ——— En-tête sur une seule ligne ——— */
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  margin-bottom: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.title {
+  margin: 0;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.subtitle {
+  overflow: hidden;
+  color: var(--text-faint);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.langSwitch {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.lang,
+.langActive {
+  height: 22px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.lang:hover {
+  color: var(--text);
+}
+
+.langActive {
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: 0 2px 6px -2px rgba(99, 85, 246, 0.5);
+}
+
+.headerActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.primary,
+.secondary {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.primary {
+  border: 0;
+  background: var(--gradient);
+  color: #fff;
+  box-shadow: 0 2px 8px -2px rgba(99, 85, 246, 0.45);
+}
+
+.primary:hover {
+  filter: brightness(1.06);
+}
+
+.secondary {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.secondary:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* ——— Colonnes ——— */
+
+.main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 16px;
+  min-height: 0;
+}
+
+.formColumn {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.outputColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    height: auto;
+    padding-bottom: 24px;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    height: auto;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .brand {
+    flex-basis: 100%;
+  }
+
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .formColumn {
+    overflow: visible;
+  }
+
+  .outputColumn {
+    min-height: 70vh;
+  }
+}
