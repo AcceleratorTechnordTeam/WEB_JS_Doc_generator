@@ -1,5 +1,7 @@
 # Générateur de documentation
 
+[![▶ Ouvrir l'outil](https://img.shields.io/badge/%E2%96%B6%20Ouvrir%20l'outil-6355F6?style=for-the-badge&logo=githubpages&logoColor=white)](https://acceleratortechnordteam.github.io/WEB_JS_Doc_generator/)
+
 Formulaire React + Vite qui génère une documentation standardisée en **Markdown** :
 
 - **Fonction** — commentaire JSDoc (TypeScript) ou commentaires XML `///` (C#), plus une fiche de documentation.
