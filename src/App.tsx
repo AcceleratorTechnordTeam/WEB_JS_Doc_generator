@@ -7,7 +7,7 @@ import { OutputPanel } from './components/OutputPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { emptyDoc, emptyObject, LANG_LABEL, reviveDoc, reviveObject } from './lib/defaults';
 import { generateMarkdown } from './lib/markdown';
-import { generateObjectMarkdown } from './lib/objectMarkdown';
+import { generateObjectCode } from './lib/objectCode';
 import { uid } from './lib/text';
 import { validate, validateObject } from './lib/validate';
 import type { Lang, Mode, SavedDoc } from './types';
@@ -45,7 +45,7 @@ export default function App() {
   const lang = isObject ? obj.lang : doc.lang;
   const name = isObject ? obj.name : doc.name;
 
-  const markdown = useMemo(() => (isObject ? generateObjectMarkdown(obj) : generateMarkdown(doc)), [isObject, obj, doc]);
+  const output = useMemo(() => (isObject ? generateObjectCode(obj) : generateMarkdown(doc)), [isObject, obj, doc]);
   const issues = useMemo(() => (isObject ? validateObject(obj) : validate(doc)), [isObject, obj, doc]);
 
   const setLang = (l: Lang) => (isObject ? setObj((o) => ({ ...o, lang: l })) : setDoc((d) => ({ ...d, lang: l })));
@@ -127,7 +127,13 @@ export default function App() {
         </div>
 
         <aside className={s.outputColumn}>
-          <OutputPanel markdown={markdown} issues={issues} name={name} />
+          <OutputPanel
+            output={output}
+            issues={issues}
+            name={name}
+            extension={isObject ? (lang === 'ts' ? 'ts' : 'cs') : 'md'}
+            what={isObject ? (lang === 'ts' ? 'le type' : 'la classe') : 'le Markdown'}
+          />
           <HistoryPanel
             history={history}
             onLoad={load}

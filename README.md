@@ -2,10 +2,10 @@
 
 [![▶ Ouvrir l'outil](https://img.shields.io/badge/%E2%96%B6%20Ouvrir%20l'outil-6355F6?style=for-the-badge&logo=githubpages&logoColor=white)](https://acceleratortechnordteam.github.io/WEB_JS_Doc_generator/)
 
-Formulaire React + Vite qui génère une documentation standardisée en **Markdown** :
+Formulaire React + Vite qui génère une documentation standardisée :
 
 - **Fonction** — commentaire JSDoc (TypeScript) ou commentaires XML `///` (C#), plus une fiche de documentation.
-- **Objet** — tableau des propriétés d'une interface / d'un type (TS) ou d'une classe / d'un record (C#).
+- **Objet** — type TypeScript documenté en JSDoc (`export type …`) ou classe C# documentée en commentaires XML.
 
 Tout tourne dans le navigateur (brouillons et historique dans `localStorage`), sans backend.
 

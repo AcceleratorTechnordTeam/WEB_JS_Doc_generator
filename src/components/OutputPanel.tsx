@@ -34,7 +34,7 @@ function CopyButton({ text, label, primary }: { text: string; label: string; pri
 }
 
 function download(filename: string, content: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: 'text/markdown;charset=utf-8' }));
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
@@ -43,23 +43,28 @@ function download(filename: string, content: string) {
 }
 
 interface Props {
-  markdown: string;
+  /** Texte généré (Markdown ou code). */
+  output: string;
   issues: Issue[];
   /** Nom de base du fichier téléchargé (sans extension). */
   name: string;
+  /** Extension du fichier téléchargé, sans point : md, ts, cs… */
+  extension: string;
+  /** Ce qui est copié, pour le libellé du bouton : « le Markdown », « le type »… */
+  what: string;
 }
 
-export function OutputPanel({ markdown, issues, name }: Props) {
+export function OutputPanel({ output, issues, name, extension, what }: Props) {
   const errors = issues.filter((i) => i.level === 'error').length;
-  const filename = `${name.trim().replace(/[^\w.-]+/g, '_') || 'documentation'}.md`;
+  const filename = `${name.trim().replace(/[^\w.-]+/g, '_') || 'documentation'}.${extension}`;
 
   return (
     <section className={s.panel} aria-label="Résultat">
       <div className={s.toolbar}>
         <div className={s.actions}>
-          <CopyButton text={markdown} label="Copier le Markdown" primary />
-          <button type="button" className={s.button} onClick={() => download(filename, markdown)}>
-            Télécharger .md
+          <CopyButton text={output} label={`Copier ${what}`} primary />
+          <button type="button" className={s.button} onClick={() => download(filename, output)}>
+            Télécharger .{extension}
           </button>
         </div>
       </div>
@@ -78,7 +83,7 @@ export function OutputPanel({ markdown, issues, name }: Props) {
       {errors > 0 && <p className={s.note}>Le résultat reste copiable, mais complète les champs en erreur avant de le committer.</p>}
 
       <pre className={s.code} tabIndex={0}>
-        <code>{markdown}</code>
+        <code>{output}</code>
       </pre>
     </section>
   );
