@@ -7,7 +7,7 @@ Outil React + Vite qui décrit un projet et exporte un **JSON final** standardis
 - **Endpoints** — identifiant, méthode HTTP, URL.
 - **Objets** — type TypeScript documenté en JSDoc (ou classe C# documentée en commentaires XML).
 - **Fonctions** — commentaire TSDoc strict (ou commentaires XML `///` en C#), copiable seul.
-- **Messages** — identifiant et texte.
+- **Messages** — identifiant, type (erreur, succès, warning, info) et texte.
 
 Format du JSON exporté (les clés `onjectName` et `mesages` sont volontairement écrites ainsi, comme dans le format de référence) :
 
@@ -17,7 +17,7 @@ Format du JSON exporté (les clés `onjectName` et `mesages` sont volontairement
     { "endpoint": [{ "requestId": "001", "type": "GET", "endpoint": "url.example" }] },
     { "object": [{ "objectId": "Object 01", "onjectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
-    { "mesages": [{ "messageId": "Error message 01", "message": "…" }] }
+    { "mesages": [{ "messageId": "Error message 01", "type": "error", "message": "…" }] }
 ]
 ```
 

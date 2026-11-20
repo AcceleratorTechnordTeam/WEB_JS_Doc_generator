@@ -3,7 +3,15 @@ import { generateComment } from '../lib/comment';
 import { LANG_LABEL } from '../lib/defaults';
 import { moveItem, patchItem, removeItem } from '../lib/list';
 import { generateObjectCode } from '../lib/objectCode';
-import { HTTP_METHODS, newEndpoint, newFunctionEntry, newMessage, newObjectEntry } from '../lib/project';
+import {
+  changeMessageType,
+  HTTP_METHODS,
+  MESSAGE_TYPES,
+  newEndpoint,
+  newFunctionEntry,
+  newMessage,
+  newObjectEntry,
+} from '../lib/project';
 import { validate, validateObject } from '../lib/validate';
 import type {
   EndpointDoc,
@@ -12,6 +20,7 @@ import type {
   HttpMethod,
   Lang,
   MessageDoc,
+  MessageType,
   ObjectDoc,
   ObjectEntry,
 } from '../types';
@@ -31,6 +40,12 @@ const METHOD_CLASS: Record<HttpMethod, string> = {
   PUT: w.put,
   PATCH: w.patch,
   DELETE: w.delete,
+};
+const MESSAGE_CLASS: Record<MessageType, string> = {
+  error: w.msgError,
+  success: w.msgSuccess,
+  warning: w.msgWarning,
+  info: w.msgInfo,
 };
 
 /* ——— Endpoints ——— */
@@ -100,7 +115,8 @@ export function MessagesTab({ messages, update }: { messages: MessageDoc[]; upda
       <Section
         title="Messages"
         count={messages.length}
-        onAdd={() => update((l) => [...l, newMessage(l)])}
+        // Un nouveau message reprend le type du dernier : pratique pour saisir une série.
+        onAdd={() => update((l) => [...l, newMessage(l, l[l.length - 1]?.type)])}
         addLabel="Ajouter un message"
       >
         {messages.length === 0 && <p className={f.empty}>Aucun message.</p>}
@@ -108,7 +124,7 @@ export function MessagesTab({ messages, update }: { messages: MessageDoc[]; upda
           const label = `le message ${m.messageId || i + 1}`;
           const patch = (v: Partial<MessageDoc>) => update((l) => patchItem(l, m.id, v));
           return (
-            <div key={m.id} className={w.messageLine}>
+            <div key={m.id} className={`${w.messageLine} ${MESSAGE_CLASS[m.type]}`}>
               <input
                 className={`${f.input} ${f.mono}`}
                 value={m.messageId}
@@ -117,6 +133,18 @@ export function MessagesTab({ messages, update }: { messages: MessageDoc[]; upda
                 aria-label={`Identifiant pour ${label}`}
                 {...code}
               />
+              <select
+                className={`${w.select} ${w.msgSelect}`}
+                value={m.type}
+                onChange={(ev) => update((l) => changeMessageType(l, m.id, ev.target.value as MessageType))}
+                aria-label={`Type pour ${label}`}
+              >
+                {MESSAGE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
               <input
                 className={f.input}
                 value={m.message}

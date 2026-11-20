@@ -97,9 +97,35 @@
 
 .messageLine {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
   gap: 4px;
   align-items: center;
+  padding-left: 8px;
+  border-left: 3px solid var(--msg-color, var(--border));
+  border-radius: 2px;
+}
+
+/* Identifiant · type · actions sur la 1re ligne, texte du message en pleine largeur dessous. */
+.messageLine > :nth-child(3) {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.messageLine + .messageLine {
+  margin-top: 6px;
+}
+
+/* Couleur par type de message : bordure de la ligne + sélecteur. */
+.msgError { --msg-color: var(--danger); --msg-soft: var(--danger-soft); }
+.msgSuccess { --msg-color: var(--success); --msg-soft: var(--success-soft); }
+.msgWarning { --msg-color: #d97706; --msg-soft: var(--warning-soft); }
+.msgInfo { --msg-color: var(--ts); --msg-soft: rgba(47, 125, 246, 0.08); }
+
+.msgSelect {
+  border-color: transparent;
+  background: var(--msg-soft);
+  color: var(--msg-color);
+  font-family: var(--sans);
 }
 
 .select {
@@ -302,15 +328,6 @@
   }
 
   .endpointLine > :nth-child(3) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  .messageLine {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .messageLine > :nth-child(2) {
     grid-column: 1 / -1;
     grid-row: 2;
   }

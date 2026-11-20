@@ -4,6 +4,7 @@ import type {
   HttpMethod,
   Issue,
   MessageDoc,
+  MessageType,
   ObjectEntry,
   ProjectDoc,
   SavedProject,
@@ -40,14 +41,53 @@ export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
   url: '',
 });
 
-export const newMessage = (list: MessageDoc[]): MessageDoc => ({
+export const MESSAGE_TYPES: { value: MessageType; label: string; prefix: string }[] = [
+  { value: 'error', label: 'Erreur', prefix: 'Error message' },
+  { value: 'success', label: 'Succès', prefix: 'Success message' },
+  { value: 'warning', label: 'Warning', prefix: 'Warning message' },
+  { value: 'info', label: 'Info', prefix: 'Info message' },
+];
+
+const prefixOf = (type: MessageType) => MESSAGE_TYPES.find((t) => t.value === type)!.prefix;
+
+/** « Error message 01 », « Success message 02 »… : identifiant reconnu comme généré automatiquement. */
+const AUTO_MESSAGE_ID = /^(Error|Success|Warning|Info) message \d+$/;
+
+/** Prochain identifiant libre pour un type : numérotation séparée par type. */
+function nextMessageId(list: MessageDoc[], type: MessageType): string {
+  const prefix = prefixOf(type);
+  const sameType = list.filter((m) => m.messageId.startsWith(prefix));
+  return nextId(
+    sameType.map((m) => m.messageId),
+    (n) => `${prefix} ${pad(n, 2)}`,
+  );
+}
+
+export const newMessage = (list: MessageDoc[], type: MessageType = 'error'): MessageDoc => ({
   id: uid(),
-  messageId: nextId(
-    list.map((m) => m.messageId),
-    (n) => `Error message ${pad(n, 2)}`,
-  ),
+  messageId: nextMessageId(list, type),
+  type,
   message: '',
 });
+
+/**
+ * Change le type d'un message. Si son identifiant est encore celui généré
+ * automatiquement, il est renommé avec le préfixe du nouveau type.
+ */
+export function changeMessageType(list: MessageDoc[], id: string, type: MessageType): MessageDoc[] {
+  const others = list.filter((m) => m.id !== id);
+  return list.map((m) => {
+    if (m.id !== id) return m;
+    const messageId = AUTO_MESSAGE_ID.test(m.messageId.trim()) ? nextMessageId(others, type) : m.messageId;
+    return { ...m, type, messageId };
+  });
+}
+
+/** Type d'un message stocké par une version antérieure : déduit de son identifiant. */
+function reviveMessageType(raw: unknown, messageId: string): MessageType {
+  if (MESSAGE_TYPES.some((t) => t.value === raw)) return raw as MessageType;
+  return MESSAGE_TYPES.find((t) => messageId.startsWith(t.prefix))?.value ?? 'error';
+}
 
 export const newObjectEntry = (list: ObjectEntry[]): ObjectEntry => ({
   id: uid(),
@@ -92,6 +132,7 @@ export function reviveProject(raw: unknown): ProjectDoc {
     messages: list(raw.messages).map((m) => ({
       id: str(m.id) || uid(),
       messageId: str(m.messageId),
+      type: reviveMessageType(m.type, str(m.messageId)),
       message: str(m.message),
     })),
   };
@@ -177,7 +218,7 @@ export function generateProjectJson(p: ProjectDoc): string {
       })),
     },
     {
-      mesages: p.messages.map((m) => ({ messageId: m.messageId.trim(), message: m.message.trim() })), // idem
+      mesages: p.messages.map((m) => ({ messageId: m.messageId.trim(), type: m.type, message: m.message.trim() })), // idem
     },
   ];
   return JSON.stringify(data, null, 4) + '\n';

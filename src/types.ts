@@ -69,9 +69,12 @@ export interface EndpointDoc {
   url: string;
 }
 
+export type MessageType = 'error' | 'success' | 'warning' | 'info';
+
 export interface MessageDoc {
   id: string;
   messageId: string;
+  type: MessageType;
   message: string;
 }
 
