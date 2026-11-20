@@ -9,7 +9,7 @@ Outil React + Vite qui décrit un projet et exporte un **JSON final** standardis
 - **Fonctions** — commentaire TSDoc strict (ou commentaires XML `///` en C#), copiable seul.
 - **Messages** — identifiant, type (erreur, succès, warning, info) et texte.
 
-Format du JSON exporté (la clé `mesages` est volontairement écrite ainsi, comme dans le format de référence) :
+Format du JSON exporté :
 
 ```json
 [
@@ -17,7 +17,7 @@ Format du JSON exporté (la clé `mesages` est volontairement écrite ainsi, com
     { "endpoint": [{ "requestId": "001", "type": "GET", "endpoint": "url.example" }] },
     { "object": [{ "objectId": "Object 01", "objectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
-    { "mesages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }
+    { "messages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }
 ]
 ```
 
