@@ -4,7 +4,7 @@
 
 Formulaire React + Vite qui génère une documentation standardisée :
 
-- **Fonction** — commentaire JSDoc (TypeScript) ou commentaires XML `///` (C#), plus une fiche de documentation.
+- **Fonction** — commentaire TSDoc/JSDoc (TypeScript) ou commentaires XML `///` (C#), prêt à coller au-dessus de la fonction.
 - **Objet** — type TypeScript documenté en JSDoc (`export type …`) ou classe C# documentée en commentaires XML.
 
 Tout tourne dans le navigateur (brouillons et historique dans `localStorage`), sans backend.

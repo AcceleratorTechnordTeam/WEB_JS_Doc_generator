@@ -43,14 +43,14 @@ function download(filename: string, content: string) {
 }
 
 interface Props {
-  /** Texte généré (Markdown ou code). */
+  /** Code généré (commentaire, type ou classe). */
   output: string;
   issues: Issue[];
   /** Nom de base du fichier téléchargé (sans extension). */
   name: string;
   /** Extension du fichier téléchargé, sans point : md, ts, cs… */
   extension: string;
-  /** Ce qui est copié, pour le libellé du bouton : « le Markdown », « le type »… */
+  /** Ce qui est copié, pour le libellé du bouton : « le commentaire », « le type »… */
   what: string;
 }
 

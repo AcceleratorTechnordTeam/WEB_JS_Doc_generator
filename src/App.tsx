@@ -6,7 +6,7 @@ import { ObjectForm } from './components/ObjectForm';
 import { OutputPanel } from './components/OutputPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { emptyDoc, emptyObject, LANG_LABEL, reviveDoc, reviveObject } from './lib/defaults';
-import { generateMarkdown } from './lib/markdown';
+import { generateComment } from './lib/comment';
 import { generateObjectCode } from './lib/objectCode';
 import { uid } from './lib/text';
 import { validate, validateObject } from './lib/validate';
@@ -45,7 +45,7 @@ export default function App() {
   const lang = isObject ? obj.lang : doc.lang;
   const name = isObject ? obj.name : doc.name;
 
-  const output = useMemo(() => (isObject ? generateObjectCode(obj) : generateMarkdown(doc)), [isObject, obj, doc]);
+  const output = useMemo(() => (isObject ? generateObjectCode(obj) : generateComment(doc)), [isObject, obj, doc]);
   const issues = useMemo(() => (isObject ? validateObject(obj) : validate(doc)), [isObject, obj, doc]);
 
   const setLang = (l: Lang) => (isObject ? setObj((o) => ({ ...o, lang: l })) : setDoc((d) => ({ ...d, lang: l })));
@@ -81,7 +81,7 @@ export default function App() {
       <header className={s.header}>
         <div className={s.brand}>
           <h1 className={s.title}>Générateur de documentation</h1>
-          <span className={s.subtitle}>JSDoc · XML doc C# · Markdown</span>
+          <span className={s.subtitle}>TSDoc · XML doc C# · types</span>
         </div>
         <div className={s.langSwitch} role="radiogroup" aria-label="Type de documentation">
           {MODES.map((m) => (
@@ -131,8 +131,8 @@ export default function App() {
             output={output}
             issues={issues}
             name={name}
-            extension={isObject ? (lang === 'ts' ? 'ts' : 'cs') : 'md'}
-            what={isObject ? (lang === 'ts' ? 'le type' : 'la classe') : 'le Markdown'}
+            extension={lang === 'ts' ? 'ts' : 'cs'}
+            what={isObject ? (lang === 'ts' ? 'le type' : 'la classe') : 'le commentaire'}
           />
           <HistoryPanel
             history={history}
