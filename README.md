@@ -6,7 +6,7 @@ Outil React + Vite qui décrit un projet et exporte un **JSON final** standardis
 
 - **Endpoints** — identifiant, méthode HTTP, URL.
 - **Objets** — type TypeScript documenté en JSDoc (ou classe C# documentée en commentaires XML).
-- **Fonctions** — commentaire TSDoc, avec le type des paramètres (`@param {string} nom`) quand il est renseigné (ou commentaires XML `///` en C#), copiable seul.
+- **Fonctions** — commentaire TSDoc, avec le type des paramètres et du retour (`@param {string} nom`, `@returns {string | null}`) quand il est renseigné (ou commentaires XML `///` en C#), copiable seul.
 - **Messages** — identifiant, type (erreur, succès, warning, info) et texte.
 
 Format du JSON exporté :

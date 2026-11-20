@@ -119,13 +119,27 @@ export function DocForm({ doc, setDoc }: Props) {
       </Section>
 
       <Section title="Retour">
-        <input
-          className={s.input}
-          value={doc.returnDescription}
-          onChange={(e) => set('returnDescription', e.target.value)}
-          placeholder="Description du retour — laisser vide si la fonction ne renvoie rien"
-          aria-label="Description du retour"
-        />
+        {/* Le type de retour n'existe que côté TS : les commentaires XML C# ne portent pas de type. */}
+        <div className={isTs ? s.pairLine : undefined}>
+          {isTs && (
+            <input
+              className={`${s.input} ${s.mono}`}
+              value={doc.returnType}
+              onChange={(e) => set('returnType', e.target.value)}
+              placeholder={ph.returnType}
+              aria-label="Type de retour"
+              title="Laisser vide ou void si la fonction ne renvoie rien"
+              {...code}
+            />
+          )}
+          <input
+            className={s.input}
+            value={doc.returnDescription}
+            onChange={(e) => set('returnDescription', e.target.value)}
+            placeholder="Description du retour — laisser vide si la fonction ne renvoie rien"
+            aria-label="Description du retour"
+          />
+        </div>
       </Section>
 
       <Section

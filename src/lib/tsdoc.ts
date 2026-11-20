@@ -1,6 +1,8 @@
 import type { FunctionDoc } from '../types';
 import { nonEmptyLines, toLines, trimBlock } from './text';
 
+const VOID_TYPES = new Set(['void', 'undefined', 'never', 'Promise<void>']);
+
 /** Empêche un "*\/" présent dans le texte de fermer le commentaire. */
 const safe = (s: string) => s.replace(/\*\//g, '*\\/');
 
@@ -47,8 +49,11 @@ export function generateTsDoc(d: FunctionDoc): string {
     tags.push(...tag(`@param ${type ? `{${type}} ` : ''}${name}`, text));
   }
 
+  // @returns {type} description : le type n'est écrit que s'il est renseigné et n'est pas « vide ».
   const rd = d.returnDescription.trim();
-  if (rd) tags.push(...tag('@returns', rd, ' '));
+  const rt = d.returnType.trim();
+  const typed = rt && !VOID_TYPES.has(rt) ? `{${rt}}` : '';
+  if (rd || typed) tags.push(...tag(`@returns${typed ? ` ${typed}` : ''}`, rd, ' '));
 
   for (const t of d.throws) {
     const type = t.type.trim();
