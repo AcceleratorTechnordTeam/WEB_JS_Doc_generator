@@ -75,24 +75,19 @@ export function DocForm({ doc, setDoc }: Props) {
                 />
                 <input
                   className={`${s.input} ${s.mono}`}
-                  value={p.type}
-                  onChange={(e) => patch({ type: e.target.value })}
-                  placeholder={ph.type}
-                  aria-label={`Type du ${label}`}
-                  {...code}
-                />
-                <input
-                  className={`${s.input} ${s.mono}`}
                   value={p.defaultValue}
                   onChange={(e) => patch({ defaultValue: e.target.value })}
                   placeholder="défaut"
                   aria-label={`Valeur par défaut du ${label}`}
                   {...code}
                 />
-                <label className={s.toggle} title="Paramètre optionnel">
-                  <input type="checkbox" checked={p.optional} onChange={(e) => patch({ optional: e.target.checked })} />
-                  opt.
-                </label>
+                {/* En TSDoc, l'optionnalité vient de la signature (`?`) : la case ne sert qu'en C#. */}
+                {!isTs && (
+                  <label className={s.toggle} title="Paramètre optionnel">
+                    <input type="checkbox" checked={p.optional} onChange={(e) => patch({ optional: e.target.checked })} />
+                    opt.
+                  </label>
+                )}
                 <RowActions
                   label={label}
                   onRemove={() => updateList('params', (l) => removeItem(l, p.id))}
@@ -113,24 +108,13 @@ export function DocForm({ doc, setDoc }: Props) {
       </Section>
 
       <Section title="Retour">
-        <div className={s.pairLine}>
-          <input
-            className={`${s.input} ${s.mono}`}
-            value={doc.returnType}
-            onChange={(e) => set('returnType', e.target.value)}
-            placeholder={ph.returnType}
-            aria-label="Type de retour"
-            title={isTs ? 'Vide ou void si rien' : 'Vide, void ou Task si rien'}
-            {...code}
-          />
-          <input
-            className={s.input}
-            value={doc.returnDescription}
-            onChange={(e) => set('returnDescription', e.target.value)}
-            placeholder="Description du retour"
-            aria-label="Description du retour"
-          />
-        </div>
+        <input
+          className={s.input}
+          value={doc.returnDescription}
+          onChange={(e) => set('returnDescription', e.target.value)}
+          placeholder="Description du retour — laisser vide si la fonction ne renvoie rien"
+          aria-label="Description du retour"
+        />
       </Section>
 
       <Section

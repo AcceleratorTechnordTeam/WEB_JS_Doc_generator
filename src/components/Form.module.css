@@ -168,7 +168,7 @@
 
 .paramLine {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.8fr) auto auto;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
   gap: 4px;
   align-items: center;
 }
@@ -254,33 +254,6 @@
 }
 
 @media (max-width: 560px) {
-  .paramLine {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    grid-template-areas:
-      'name type type'
-      'def opt act';
-  }
-
-  .paramLine > :nth-child(1) {
-    grid-area: name;
-  }
-
-  .paramLine > :nth-child(2) {
-    grid-area: type;
-  }
-
-  .paramLine > :nth-child(3) {
-    grid-area: def;
-  }
-
-  .paramLine > :nth-child(4) {
-    grid-area: opt;
-  }
-
-  .paramLine > :nth-child(5) {
-    grid-area: act;
-  }
-
   .propLine {
     grid-template-columns: minmax(0, 1fr) auto auto auto;
     grid-template-areas:

@@ -1,12 +1,9 @@
 import type { FunctionDoc, Issue, ObjectDoc } from '../types';
-import { VOID_CS_TYPES } from './csharpdoc';
 
 const IDENT = {
   ts: /^[A-Za-z_$][\w$]*$/,
   csharp: /^@?[A-Za-z_]\w*$/,
 };
-
-const VOID_TS = new Set(['void', 'undefined', 'never', 'Promise<void>']);
 
 /** Règles de standardisation : erreurs = doc incomplète, avertissements = à vérifier. */
 export function validate(d: FunctionDoc): Issue[] {
@@ -33,7 +30,6 @@ export function validate(d: FunctionDoc): Issue[] {
       if (seen.has(pName)) error(`Le paramètre ${label} est en double.`);
       seen.add(pName);
     }
-    if (!p.type.trim()) warn(`Le paramètre ${label} n'a pas de type.`);
     if (!p.description.trim()) error(`Le paramètre ${label} n'a pas de description.`);
   });
 
@@ -45,12 +41,6 @@ export function validate(d: FunctionDoc): Issue[] {
     else tpSeen.add(tName);
     if (!t.description.trim()) warn(`Le paramètre de type ${tName ? `« ${tName} »` : `n°${i + 1}`} n'a pas de description.`);
   });
-
-  const rt = d.returnType.trim();
-  const voidTypes = d.lang === 'ts' ? VOID_TS : VOID_CS_TYPES;
-  if (rt && !voidTypes.has(rt) && !d.returnDescription.trim()) {
-    error(`Le retour (${rt}) doit avoir une description.`);
-  }
 
   d.throws.forEach((t, i) => {
     if (!t.type.trim()) error(`L'exception n°${i + 1} n'a pas de type.`);
