@@ -150,7 +150,10 @@ export function migrateLegacy(): ProjectDoc {
 const objectType = (o: ObjectEntry) =>
   o.doc.lang === 'ts' ? generateTsTypeBody(o.doc) : generateCSharpClass(o.doc).trimEnd();
 
-/** JSON final : tableau de blocs à une clé, dans l'ordre titre → endpoints → objets → fonctions → messages. */
+/**
+ * JSON final : tableau de blocs à une clé, dans l'ordre titre → endpoints → objets → fonctions → messages.
+ * Les clés `onjectName` et `mesages` reprennent volontairement l'orthographe du format de référence.
+ */
 export function generateProjectJson(p: ProjectDoc): string {
   const data = [
     { title: p.title.trim() },
@@ -160,7 +163,7 @@ export function generateProjectJson(p: ProjectDoc): string {
     {
       object: p.objects.map((o) => ({
         objectId: o.objectId.trim(),
-        objectName: o.doc.name.trim(),
+        onjectName: o.doc.name.trim(), // orthographe imposée par le format attendu
         description: o.doc.description.trim(),
         objectType: objectType(o),
       })),
@@ -174,7 +177,7 @@ export function generateProjectJson(p: ProjectDoc): string {
       })),
     },
     {
-      messages: p.messages.map((m) => ({ messageId: m.messageId.trim(), message: m.message.trim() })),
+      mesages: p.messages.map((m) => ({ messageId: m.messageId.trim(), message: m.message.trim() })), // idem
     },
   ];
   return JSON.stringify(data, null, 4) + '\n';

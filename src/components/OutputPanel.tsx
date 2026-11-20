@@ -42,6 +42,81 @@ function download(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+/* API File System Access (Chrome, Edge, Opera) : non typée dans lib.dom pour l'instant. */
+interface SaveFilePickerOptions {
+  suggestedName?: string;
+  types?: { description: string; accept: Record<string, string[]> }[];
+}
+interface WritableFile {
+  write(data: string): Promise<void>;
+  close(): Promise<void>;
+}
+type ShowSaveFilePicker = (options?: SaveFilePickerOptions) => Promise<{ createWritable(): Promise<WritableFile> }>;
+
+const saveFilePicker = (): ShowSaveFilePicker | undefined =>
+  (window as unknown as { showSaveFilePicker?: ShowSaveFilePicker }).showSaveFilePicker;
+
+/** Mêmes types MIME que l'extension : utile pour le filtre de la boîte « Enregistrer sous ». */
+const MIME: Record<string, string> = {
+  json: 'application/json',
+  ts: 'text/typescript',
+  cs: 'text/plain',
+  md: 'text/markdown',
+};
+
+/**
+ * Ouvre la boîte « Enregistrer sous » du système pour choisir le dossier et le nom.
+ * Renvoie `false` si l'utilisateur annule ; lève une erreur si l'écriture échoue.
+ */
+async function saveAs(filename: string, content: string, extension: string): Promise<boolean> {
+  const picker = saveFilePicker();
+  if (!picker) {
+    download(filename, content);
+    return true;
+  }
+  try {
+    const handle = await picker({
+      suggestedName: filename,
+      types: [{ description: `Fichier .${extension}`, accept: { [MIME[extension] ?? 'text/plain']: [`.${extension}`] } }],
+    });
+    const file = await handle.createWritable();
+    await file.write(content);
+    await file.close();
+    return true;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') return false;
+    throw err;
+  }
+}
+
+function SaveAsButton({ filename, content, extension }: { filename: string; content: string; extension: string }) {
+  const [state, setState] = useState<'idle' | 'ok' | 'ko'>('idle');
+  const supported = Boolean(saveFilePicker());
+  const onClick = async () => {
+    try {
+      if (!(await saveAs(filename, content, extension))) return;
+      setState('ok');
+    } catch {
+      setState('ko');
+    }
+    window.setTimeout(() => setState('idle'), 2000);
+  };
+  return (
+    <button
+      type="button"
+      className={s.button}
+      onClick={onClick}
+      title={
+        supported
+          ? 'Choisir le dossier et le nom du fichier'
+          : 'Ce navigateur ne permet pas de choisir le dossier : le fichier part dans Téléchargements (Chrome ou Edge le permettent).'
+      }
+    >
+      {state === 'ok' ? '✓ Enregistré' : state === 'ko' ? "Échec de l'enregistrement" : 'Enregistrer sous…'}
+    </button>
+  );
+}
+
 interface Props {
   /** Code généré (commentaire, type ou classe). */
   output: string;
@@ -52,9 +127,11 @@ interface Props {
   extension: string;
   /** Ce qui est copié, pour le libellé du bouton : « le commentaire », « le type »… */
   what: string;
+  /** Ajoute « Enregistrer sous… » pour choisir l'emplacement du fichier. */
+  withSaveAs?: boolean;
 }
 
-export function OutputPanel({ output, issues, name, extension, what }: Props) {
+export function OutputPanel({ output, issues, name, extension, what, withSaveAs }: Props) {
   const errors = issues.filter((i) => i.level === 'error').length;
   const filename = `${name.trim().replace(/[^\w.-]+/g, '_') || 'documentation'}.${extension}`;
 
@@ -63,6 +140,7 @@ export function OutputPanel({ output, issues, name, extension, what }: Props) {
       <div className={s.toolbar}>
         <div className={s.actions}>
           <CopyButton text={output} label={`Copier ${what}`} primary />
+          {withSaveAs && <SaveAsButton filename={filename} content={output} extension={extension} />}
           <button type="button" className={s.button} onClick={() => download(filename, output)}>
             Télécharger .{extension}
           </button>

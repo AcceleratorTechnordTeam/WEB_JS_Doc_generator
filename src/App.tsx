@@ -155,7 +155,7 @@ export default function App() {
         </div>
 
         <aside className={s.outputColumn}>
-          <OutputPanel output={json} issues={issues} name={project.title} extension="json" what="le JSON" />
+          <OutputPanel output={json} issues={issues} name={project.title} extension="json" what="le JSON" withSaveAs />
           <HistoryPanel
             history={saved}
             onLoad={load}
