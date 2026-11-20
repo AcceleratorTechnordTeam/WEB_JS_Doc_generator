@@ -46,6 +46,25 @@ export function generateTsType(d: ObjectDoc): string {
   return out.join('\n') + '\n';
 }
 
+/**
+ * Corps du type TS sur une seule chaîne, format du JSON d'export :
+ * `{/** doc *\/\nnom: type;\n\nautre?: type;}`.
+ */
+export function generateTsTypeBody(d: ObjectDoc): string {
+  const props = d.properties
+    .filter((p) => p.name.trim())
+    .map((p) => {
+      const doc = p.description.trim() ? toLines(p.description.trim()) : [];
+      const def = p.defaultValue.trim();
+      if (def) doc.push(`@default ${def}`);
+      const raw = p.name.trim();
+      const key = TS_IDENT.test(raw) ? raw : `'${raw.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+      const line = `${p.readonly ? 'readonly ' : ''}${key}${isOptional(p) ? '?' : ''}: ${p.type.trim() || 'unknown'};`;
+      return [...jsdoc(doc, ''), line].join('\n');
+    });
+  return `{${props.join('\n\n')}}`;
+}
+
 /** `email` → `Email` (convention C# des propriétés). */
 const pascal = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 

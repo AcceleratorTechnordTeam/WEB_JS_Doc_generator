@@ -1,79 +1,91 @@
 import { useMemo, useState } from 'react';
 import s from './App.module.css';
-import { DocForm } from './components/DocForm';
 import { HistoryPanel } from './components/HistoryPanel';
-import { ObjectForm } from './components/ObjectForm';
 import { OutputPanel } from './components/OutputPanel';
+import { EndpointsTab, FunctionsTab, MessagesTab, ObjectsTab } from './components/ProjectTabs';
+import w from './components/Workspace.module.css';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { emptyDoc, emptyObject, LANG_LABEL, reviveDoc, reviveObject } from './lib/defaults';
-import { generateComment } from './lib/comment';
-import { generateObjectCode } from './lib/objectCode';
+import {
+  emptyProject,
+  generateProjectJson,
+  migrateLegacy,
+  reviveProject,
+  reviveSavedProjects,
+  validateProject,
+} from './lib/project';
 import { uid } from './lib/text';
 import { validate, validateObject } from './lib/validate';
-import type { Lang, Mode, SavedDoc } from './types';
+import type { ProjectDoc, SavedProject, Tab } from './types';
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
-
-/** Les anciennes entrées (sans `mode`) sont des fonctions. */
-const reviveHistory = (raw: unknown): SavedDoc[] =>
-  Array.isArray(raw)
-    ? raw.filter(isRecord).map((r): SavedDoc => {
-        const id = String(r.id ?? uid());
-        const savedAt = Number(r.savedAt) || Date.now();
-        return r.mode === 'object'
-          ? { id, savedAt, mode: 'object', doc: reviveObject(r.doc) }
-          : { id, savedAt, mode: 'function', doc: reviveDoc(r.doc) };
-      })
-    : [];
-
-const reviveMode = (raw: unknown): Mode => (raw === 'object' ? 'object' : 'function');
-
-const LANGS: Lang[] = ['ts', 'csharp'];
-const MODES: { value: Mode; label: string }[] = [
-  { value: 'function', label: 'Fonction' },
-  { value: 'object', label: 'Objet' },
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'endpoints', label: 'Endpoints' },
+  { value: 'objects', label: 'Objets' },
+  { value: 'functions', label: 'Fonctions' },
+  { value: 'messages', label: 'Messages' },
 ];
 
+const reviveTab = (raw: unknown): Tab => (TABS.some((t) => t.value === raw) ? (raw as Tab) : 'endpoints');
+
+type ListKey = 'endpoints' | 'objects' | 'functions' | 'messages';
+
 export default function App() {
-  const [mode, setMode] = useLocalStorage<Mode>('jsdocgen:mode', () => 'function', reviveMode);
-  const [doc, setDoc] = useLocalStorage('jsdocgen:draft', () => emptyDoc(), reviveDoc);
-  const [obj, setObj] = useLocalStorage('jsdocgen:object-draft', () => emptyObject(), reviveObject);
-  const [history, setHistory] = useLocalStorage<SavedDoc[]>('jsdocgen:history', () => [], reviveHistory);
+  const [project, setProject] = useLocalStorage<ProjectDoc>('jsdocgen:project', migrateLegacy, reviveProject);
+  const [saved, setSaved] = useLocalStorage<SavedProject[]>('jsdocgen:projects', () => [], reviveSavedProjects);
+  const [tab, setTab] = useLocalStorage<Tab>('jsdocgen:tab', () => 'endpoints', reviveTab);
+  const [selectedObject, setSelectedObject] = useState<string | null>(null);
+  const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
 
-  const isObject = mode === 'object';
-  const lang = isObject ? obj.lang : doc.lang;
-  const name = isObject ? obj.name : doc.name;
+  const json = useMemo(() => generateProjectJson(project), [project]);
+  const issues = useMemo(() => validateProject(project), [project]);
 
-  const output = useMemo(() => (isObject ? generateObjectCode(obj) : generateComment(doc)), [isObject, obj, doc]);
-  const issues = useMemo(() => (isObject ? validateObject(obj) : validate(doc)), [isObject, obj, doc]);
+  /** Pastille rouge sur un onglet qui contient au moins une erreur. */
+  const tabHasError: Record<Tab, boolean> = useMemo(
+    () => ({
+      endpoints: project.endpoints.some((e) => !e.requestId.trim() || !e.url.trim()),
+      objects: project.objects.some((o) => validateObject(o.doc).some((i) => i.level === 'error')),
+      functions: project.functions.some((x) => validate(x.doc).some((i) => i.level === 'error')),
+      messages: project.messages.some((m) => !m.messageId.trim() || !m.message.trim()),
+    }),
+    [project],
+  );
 
-  const setLang = (l: Lang) => (isObject ? setObj((o) => ({ ...o, lang: l })) : setDoc((d) => ({ ...d, lang: l })));
+  const updater =
+    <K extends ListKey>(key: K) =>
+    (fn: (list: ProjectDoc[K]) => ProjectDoc[K]) =>
+      setProject((p) => ({ ...p, [key]: fn(p[key]) }));
 
   const save = () => {
-    const entry: SavedDoc = isObject
-      ? { id: uid(), savedAt: Date.now(), mode: 'object', doc: obj }
-      : { id: uid(), savedAt: Date.now(), mode: 'function', doc };
-    const key = name.trim();
-    setHistory((h) => {
-      // Une seule entrée par (type, langage, nom) : on remplace l'ancienne.
-      const rest = h.filter((e) => !(key && e.mode === mode && e.doc.lang === lang && e.doc.name.trim() === key));
-      return [entry, ...rest].slice(0, 100);
+    const title = project.title.trim();
+    setSaved((h) => {
+      // Une seule sauvegarde par titre : on remplace l'ancienne.
+      const rest = h.filter((e) => !(title && e.project.title.trim() === title));
+      return [{ id: uid(), savedAt: Date.now(), project }, ...rest].slice(0, 50);
     });
     setSavedFlash(true);
     window.setTimeout(() => setSavedFlash(false), 1500);
   };
 
   const reset = () => {
-    if (!window.confirm('Effacer le formulaire en cours ? (l’historique est conservé)')) return;
-    if (isObject) setObj(emptyObject(obj.lang));
-    else setDoc(emptyDoc(doc.lang));
+    if (!window.confirm('Commencer un nouveau projet ? Le projet en cours sera effacé (les projets enregistrés sont conservés).'))
+      return;
+    setProject(emptyProject());
+    setSelectedObject(null);
+    setSelectedFunction(null);
   };
 
-  const load = (item: SavedDoc) => {
-    if (item.mode === 'object') setObj(reviveObject(item.doc));
-    else setDoc(reviveDoc(item.doc));
-    setMode(item.mode);
+  const load = (item: SavedProject) => {
+    if (!window.confirm(`Ouvrir « ${item.project.title || 'Sans titre'} » ? Le projet en cours sera remplacé.`)) return;
+    setProject(reviveProject(item.project));
+    setSelectedObject(null);
+    setSelectedFunction(null);
+  };
+
+  const counts: Record<Tab, number> = {
+    endpoints: project.endpoints.length,
+    objects: project.objects.length,
+    functions: project.functions.length,
+    messages: project.messages.length,
   };
 
   return (
@@ -81,41 +93,13 @@ export default function App() {
       <header className={s.header}>
         <div className={s.brand}>
           <h1 className={s.title}>Générateur de documentation</h1>
-          <span className={s.subtitle}>TSDoc · XML doc C# · types</span>
-        </div>
-        <div className={s.langSwitch} role="radiogroup" aria-label="Type de documentation">
-          {MODES.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              role="radio"
-              aria-checked={mode === m.value}
-              className={mode === m.value ? s.langActive : s.lang}
-              onClick={() => setMode(m.value)}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-        <div className={s.langSwitch} role="radiogroup" aria-label="Langage">
-          {LANGS.map((l) => (
-            <button
-              key={l}
-              type="button"
-              role="radio"
-              aria-checked={lang === l}
-              className={lang === l ? s.langActive : s.lang}
-              onClick={() => setLang(l)}
-            >
-              {LANG_LABEL[l]}
-            </button>
-          ))}
+          <span className={s.subtitle}>Endpoints · objets · TSDoc · messages → JSON</span>
         </div>
         <div className={s.headerActions}>
           <button type="button" className={s.secondary} onClick={reset}>
             Nouveau
           </button>
-          <button type="button" className={s.primary} onClick={save} title="Enregistrer dans l’historique">
+          <button type="button" className={s.primary} onClick={save} title="Enregistrer le projet dans ce navigateur">
             {savedFlash ? '✓ Enregistré' : 'Enregistrer'}
           </button>
         </div>
@@ -123,21 +107,59 @@ export default function App() {
 
       <main className={s.main}>
         <div className={s.formColumn}>
-          {isObject ? <ObjectForm doc={obj} setDoc={setObj} /> : <DocForm doc={doc} setDoc={setDoc} />}
+          <input
+            className={w.titleInput}
+            value={project.title}
+            onChange={(e) => setProject((p) => ({ ...p, title: e.target.value }))}
+            placeholder="Titre général — ex. Declare Activity"
+            aria-label="Titre général"
+          />
+
+          <div className={w.tabs} role="tablist" aria-label="Catégories">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.value}
+                className={tab === t.value ? w.tabActive : w.tab}
+                onClick={() => setTab(t.value)}
+              >
+                {t.label}
+                <span className={w.tabCount}>{counts[t.value]}</span>
+                {tabHasError[t.value] && <span className={w.tabError} title="Contient des erreurs" />}
+              </button>
+            ))}
+          </div>
+
+          <div role="tabpanel">
+            {tab === 'endpoints' && <EndpointsTab endpoints={project.endpoints} update={updater('endpoints')} />}
+            {tab === 'objects' && (
+              <ObjectsTab
+                objects={project.objects}
+                update={updater('objects')}
+                selectedId={selectedObject}
+                onSelect={setSelectedObject}
+              />
+            )}
+            {tab === 'functions' && (
+              <FunctionsTab
+                functions={project.functions}
+                update={updater('functions')}
+                selectedId={selectedFunction}
+                onSelect={setSelectedFunction}
+              />
+            )}
+            {tab === 'messages' && <MessagesTab messages={project.messages} update={updater('messages')} />}
+          </div>
         </div>
 
         <aside className={s.outputColumn}>
-          <OutputPanel
-            output={output}
-            issues={issues}
-            name={name}
-            extension={lang === 'ts' ? 'ts' : 'cs'}
-            what={isObject ? (lang === 'ts' ? 'le type' : 'la classe') : 'le commentaire'}
-          />
+          <OutputPanel output={json} issues={issues} name={project.title} extension="json" what="le JSON" />
           <HistoryPanel
-            history={history}
+            history={saved}
             onLoad={load}
-            onDelete={(id) => setHistory((h) => h.filter((e) => e.id !== id))}
+            onDelete={(id) => setSaved((h) => h.filter((e) => e.id !== id))}
           />
         </aside>
       </main>

@@ -60,11 +60,51 @@ export interface ObjectDoc {
   properties: PropertyDoc[];
 }
 
-export type Mode = 'function' | 'object';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export type SavedDoc =
-  | { id: string; savedAt: number; mode: 'function'; doc: FunctionDoc }
-  | { id: string; savedAt: number; mode: 'object'; doc: ObjectDoc };
+export interface EndpointDoc {
+  id: string;
+  requestId: string;
+  method: HttpMethod;
+  url: string;
+}
+
+export interface MessageDoc {
+  id: string;
+  messageId: string;
+  message: string;
+}
+
+/** Objet du projet : identifiant métier (« Object 01 ») + sa définition. */
+export interface ObjectEntry {
+  id: string;
+  objectId: string;
+  doc: ObjectDoc;
+}
+
+/** Fonction du projet : identifiant métier (« FF01 ») + sa documentation. */
+export interface FunctionEntry {
+  id: string;
+  functionId: string;
+  doc: FunctionDoc;
+}
+
+/** Document complet exporté en JSON. */
+export interface ProjectDoc {
+  title: string;
+  endpoints: EndpointDoc[];
+  objects: ObjectEntry[];
+  functions: FunctionEntry[];
+  messages: MessageDoc[];
+}
+
+export interface SavedProject {
+  id: string;
+  savedAt: number;
+  project: ProjectDoc;
+}
+
+export type Tab = 'endpoints' | 'objects' | 'functions' | 'messages';
 
 export interface Issue {
   level: 'error' | 'warning';

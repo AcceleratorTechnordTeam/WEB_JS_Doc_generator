@@ -2,12 +2,26 @@
 
 [![▶ Ouvrir l'outil](https://img.shields.io/badge/%E2%96%B6%20Ouvrir%20l'outil-6355F6?style=for-the-badge&logo=githubpages&logoColor=white)](https://acceleratortechnordteam.github.io/WEB_JS_Doc_generator/)
 
-Formulaire React + Vite qui génère une documentation standardisée :
+Outil React + Vite qui décrit un projet et exporte un **JSON final** standardisé. Un titre général, puis un onglet par catégorie :
 
-- **Fonction** — commentaire TSDoc strict (TypeScript) ou commentaires XML `///` (C#), prêt à coller au-dessus de la fonction.
-- **Objet** — type TypeScript documenté en JSDoc (`export type …`) ou classe C# documentée en commentaires XML.
+- **Endpoints** — identifiant, méthode HTTP, URL.
+- **Objets** — type TypeScript documenté en JSDoc (ou classe C# documentée en commentaires XML).
+- **Fonctions** — commentaire TSDoc strict (ou commentaires XML `///` en C#), copiable seul.
+- **Messages** — identifiant et texte.
 
-Tout tourne dans le navigateur (brouillons et historique dans `localStorage`), sans backend.
+Format du JSON exporté :
+
+```json
+[
+    { "title": "Declare Activity" },
+    { "endpoint": [{ "requestId": "001", "type": "GET", "endpoint": "url.example" }] },
+    { "object": [{ "objectId": "Object 01", "objectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
+    { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
+    { "messages": [{ "messageId": "Error message 01", "message": "…" }] }
+]
+```
+
+Tout tourne dans le navigateur (projet en cours et projets enregistrés dans `localStorage`), sans backend.
 
 ## Développement
 

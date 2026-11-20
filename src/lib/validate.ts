@@ -79,7 +79,7 @@ export function validateObject(d: ObjectDoc): Issue[] {
       seen.add(pName);
     }
     if (!p.type.trim()) warn(`La propriété ${label} n'a pas de type.`);
-    if (!p.description.trim()) error(`La propriété ${label} n'a pas de description.`);
+    if (!p.description.trim()) warn(`La propriété ${label} n'a pas de description.`);
   });
 
   return issues;
