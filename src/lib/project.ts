@@ -194,7 +194,7 @@ const objectType = (o: ObjectEntry) =>
 
 /**
  * JSON final : tableau de blocs à une clé, dans l'ordre titre → endpoints → objets → fonctions → messages.
- * Les clés `onjectName` et `mesages` reprennent volontairement l'orthographe du format de référence.
+ * La clé `mesages` reprend volontairement l'orthographe du format de référence.
  */
 export function generateProjectJson(p: ProjectDoc): string {
   const data = [
@@ -205,7 +205,7 @@ export function generateProjectJson(p: ProjectDoc): string {
     {
       object: p.objects.map((o) => ({
         objectId: o.objectId.trim(),
-        onjectName: o.doc.name.trim(), // orthographe imposée par le format attendu
+        objectName: o.doc.name.trim(),
         description: o.doc.description.trim(),
         objectType: objectType(o),
       })),
@@ -219,7 +219,7 @@ export function generateProjectJson(p: ProjectDoc): string {
       })),
     },
     {
-      mesages: p.messages.map((m) => ({ messageId: m.messageId.trim(), type: m.type, message: m.message.trim() })), // idem
+      mesages: p.messages.map((m) => ({ messageId: m.messageId.trim(), type: m.type, message: m.message.trim() })), // orthographe imposée par le format attendu
     },
   ];
   return JSON.stringify(data, null, 4) + '\n';
