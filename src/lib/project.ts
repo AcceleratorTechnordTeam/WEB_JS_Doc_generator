@@ -23,10 +23,13 @@ export const emptyProject = (): ProjectDoc => ({ title: '', endpoints: [], objec
 
 const pad = (n: number, size: number) => String(n).padStart(size, '0');
 
-/** Premier identifiant libre selon le format donné : 001, Object 01, FF01… */
-function nextId(used: string[], format: (n: number) => string): string {
+/**
+ * Premier identifiant libre selon le format donné : 001, Object 01, FF01…
+ * La recherche part de `start` (par défaut : nombre d'éléments + 1).
+ */
+function nextId(used: string[], format: (n: number) => string, start = used.length + 1): string {
   const taken = new Set(used.map((u) => u.trim()));
-  let n = used.length + 1;
+  let n = start;
   while (taken.has(format(n))) n++;
   return format(n);
 }
@@ -41,52 +44,48 @@ export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
   url: '',
 });
 
-export const MESSAGE_TYPES: { value: MessageType; label: string; prefix: string }[] = [
-  { value: 'error', label: 'Erreur', prefix: 'Error message' },
-  { value: 'success', label: 'Succès', prefix: 'Success message' },
-  { value: 'warning', label: 'Warning', prefix: 'Warning message' },
-  { value: 'info', label: 'Info', prefix: 'Info message' },
+export const MESSAGE_TYPES: { value: MessageType; label: string; legacyPrefix: string }[] = [
+  { value: 'error', label: 'Erreur', legacyPrefix: 'Error message' },
+  { value: 'success', label: 'Succès', legacyPrefix: 'Success message' },
+  { value: 'warning', label: 'Warning', legacyPrefix: 'Warning message' },
+  { value: 'info', label: 'Info', legacyPrefix: 'Info message' },
 ];
 
-const prefixOf = (type: MessageType) => MESSAGE_TYPES.find((t) => t.value === type)!.prefix;
+/** Identifiants « Error message 01 »… générés par une version précédente. */
+const LEGACY_MESSAGE_ID = /^(Error|Success|Warning|Info) message \d+$/;
 
-/** « Error message 01 », « Success message 02 »… : identifiant reconnu comme généré automatiquement. */
-const AUTO_MESSAGE_ID = /^(Error|Success|Warning|Info) message \d+$/;
-
-/** Prochain identifiant libre pour un type : numérotation séparée par type. */
-function nextMessageId(list: MessageDoc[], type: MessageType): string {
-  const prefix = prefixOf(type);
-  const sameType = list.filter((m) => m.messageId.startsWith(prefix));
+/** « Message 01 », « Message 02 »… : numérotation commune, indépendante du type, sans tenir compte des identifiants personnalisés. */
+const nextMessageId = (list: MessageDoc[]) => {
+  const auto = list.filter((m) => /^Message \d+$/.test(m.messageId.trim()));
   return nextId(
-    sameType.map((m) => m.messageId),
-    (n) => `${prefix} ${pad(n, 2)}`,
+    list.map((m) => m.messageId),
+    (n) => `Message ${pad(n, 2)}`,
+    auto.length + 1,
   );
-}
+};
 
 export const newMessage = (list: MessageDoc[], type: MessageType = 'error'): MessageDoc => ({
   id: uid(),
-  messageId: nextMessageId(list, type),
+  messageId: nextMessageId(list),
   type,
   message: '',
 });
 
-/**
- * Change le type d'un message. Si son identifiant est encore celui généré
- * automatiquement, il est renommé avec le préfixe du nouveau type.
- */
-export function changeMessageType(list: MessageDoc[], id: string, type: MessageType): MessageDoc[] {
-  const others = list.filter((m) => m.id !== id);
-  return list.map((m) => {
-    if (m.id !== id) return m;
-    const messageId = AUTO_MESSAGE_ID.test(m.messageId.trim()) ? nextMessageId(others, type) : m.messageId;
-    return { ...m, type, messageId };
-  });
-}
-
-/** Type d'un message stocké par une version antérieure : déduit de son identifiant. */
+/** Type d'un message stocké par une version antérieure : déduit de son ancien identifiant. */
 function reviveMessageType(raw: unknown, messageId: string): MessageType {
   if (MESSAGE_TYPES.some((t) => t.value === raw)) return raw as MessageType;
-  return MESSAGE_TYPES.find((t) => messageId.startsWith(t.prefix))?.value ?? 'error';
+  return MESSAGE_TYPES.find((t) => messageId.startsWith(t.legacyPrefix))?.value ?? 'error';
+}
+
+/** Remplace les anciens identifiants « Error message 01 »… par « Message NN ». */
+function renameLegacyMessageIds(messages: MessageDoc[]): MessageDoc[] {
+  const out: MessageDoc[] = messages.filter((m) => !LEGACY_MESSAGE_ID.test(m.messageId.trim()));
+  return messages.map((m) => {
+    if (!LEGACY_MESSAGE_ID.test(m.messageId.trim())) return m;
+    const renamed = { ...m, messageId: nextMessageId(out) };
+    out.push(renamed);
+    return renamed;
+  });
 }
 
 export const newObjectEntry = (list: ObjectEntry[]): ObjectEntry => ({
@@ -129,12 +128,14 @@ export function reviveProject(raw: unknown): ProjectDoc {
       functionId: str(f.functionId),
       doc: reviveDoc(f.doc),
     })),
-    messages: list(raw.messages).map((m) => ({
-      id: str(m.id) || uid(),
-      messageId: str(m.messageId),
-      type: reviveMessageType(m.type, str(m.messageId)),
-      message: str(m.message),
-    })),
+    messages: renameLegacyMessageIds(
+      list(raw.messages).map((m) => ({
+        id: str(m.id) || uid(),
+        messageId: str(m.messageId),
+        type: reviveMessageType(m.type, str(m.messageId)),
+        message: str(m.message),
+      })),
+    ),
   };
 }
 

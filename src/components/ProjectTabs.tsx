@@ -4,7 +4,6 @@ import { LANG_LABEL } from '../lib/defaults';
 import { moveItem, patchItem, removeItem } from '../lib/list';
 import { generateObjectCode } from '../lib/objectCode';
 import {
-  changeMessageType,
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
@@ -129,14 +128,14 @@ export function MessagesTab({ messages, update }: { messages: MessageDoc[]; upda
                 className={`${f.input} ${f.mono}`}
                 value={m.messageId}
                 onChange={(ev) => patch({ messageId: ev.target.value })}
-                placeholder="Error message 01"
+                placeholder="Message 01"
                 aria-label={`Identifiant pour ${label}`}
                 {...code}
               />
               <select
                 className={`${w.select} ${w.msgSelect}`}
                 value={m.type}
-                onChange={(ev) => update((l) => changeMessageType(l, m.id, ev.target.value as MessageType))}
+                onChange={(ev) => patch({ type: ev.target.value as MessageType })}
                 aria-label={`Type pour ${label}`}
               >
                 {MESSAGE_TYPES.map((t) => (

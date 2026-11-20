@@ -17,7 +17,7 @@ Format du JSON exporté (les clés `onjectName` et `mesages` sont volontairement
     { "endpoint": [{ "requestId": "001", "type": "GET", "endpoint": "url.example" }] },
     { "object": [{ "objectId": "Object 01", "onjectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
-    { "mesages": [{ "messageId": "Error message 01", "type": "error", "message": "…" }] }
+    { "mesages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }
 ]
 ```
 
