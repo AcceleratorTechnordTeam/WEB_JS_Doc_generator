@@ -43,7 +43,8 @@ export function generateTsDoc(d: FunctionDoc): string {
     const desc = p.description.trim();
     const punctuated = desc && !/[.!?:;]$/.test(desc) ? `${desc}.` : desc;
     const text = def ? `${punctuated}${punctuated ? ' ' : ''}Par défaut : \`${def}\`.` : desc;
-    tags.push(...tag(`@param ${name}`, text));
+    const type = p.type.trim();
+    tags.push(...tag(`@param ${type ? `{${type}} ` : ''}${name}`, text));
   }
 
   const rd = d.returnDescription.trim();

@@ -64,7 +64,7 @@ export function DocForm({ doc, setDoc }: Props) {
           const patch = (v: Partial<typeof p>) => updateList('params', (l) => patchItem(l, p.id, v));
           return (
             <div key={p.id} className={s.row}>
-              <div className={s.paramLine}>
+              <div className={isTs ? s.paramLineTs : s.paramLine}>
                 <input
                   className={`${s.input} ${s.mono}`}
                   value={p.name}
@@ -73,6 +73,17 @@ export function DocForm({ doc, setDoc }: Props) {
                   aria-label={`Nom du ${label}`}
                   {...code}
                 />
+                {/* Le type n'existe que côté TS : les commentaires XML C# ne portent pas de type. */}
+                {isTs && (
+                  <input
+                    className={`${s.input} ${s.mono}`}
+                    value={p.type}
+                    onChange={(e) => patch({ type: e.target.value })}
+                    placeholder={ph.type}
+                    aria-label={`Type du ${label}`}
+                    {...code}
+                  />
+                )}
                 <input
                   className={`${s.input} ${s.mono}`}
                   value={p.defaultValue}

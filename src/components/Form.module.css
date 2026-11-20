@@ -173,6 +173,14 @@
   align-items: center;
 }
 
+/* TS : nom · type · défaut · actions */
+.paramLineTs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.7fr) auto;
+  gap: 4px;
+  align-items: center;
+}
+
 .propLine {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.8fr) auto auto auto;
