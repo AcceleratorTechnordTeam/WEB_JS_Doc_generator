@@ -4,6 +4,8 @@ import { LANG_LABEL } from '../lib/defaults';
 import { moveItem, patchItem, removeItem } from '../lib/list';
 import { generateObjectCode } from '../lib/objectCode';
 import {
+  duplicateFunction,
+  duplicateObject,
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
@@ -283,6 +285,11 @@ export function ObjectsTab({
     update((l) => removeItem(l, id));
     if (selected?.id === id) onSelect(null);
   };
+  const duplicate = (id: string) => {
+    const { list, copyId } = duplicateObject(objects, id);
+    update(() => list);
+    onSelect(copyId);
+  };
 
   return (
     <>
@@ -295,7 +302,7 @@ export function ObjectsTab({
         addLabel="Objet"
       />
       {selected ? (
-        <ObjectEditor key={selected.id} entry={selected} update={update} />
+        <ObjectEditor key={selected.id} entry={selected} update={update} onDuplicate={() => duplicate(selected.id)} />
       ) : (
         <p className={w.emptyState}>Aucun objet. Ajoute-en un pour décrire son type.</p>
       )}
@@ -303,7 +310,15 @@ export function ObjectsTab({
   );
 }
 
-function ObjectEditor({ entry, update }: { entry: ObjectEntry; update: ListUpdater<ObjectEntry> }) {
+function ObjectEditor({
+  entry,
+  update,
+  onDuplicate,
+}: {
+  entry: ObjectEntry;
+  update: ListUpdater<ObjectEntry>;
+  onDuplicate: () => void;
+}) {
   const setDoc = docSetter<ObjectDoc, ObjectEntry>(update, entry.id);
   const isTs = entry.doc.lang === 'ts';
   return (
@@ -318,6 +333,9 @@ function ObjectEditor({ entry, update }: { entry: ObjectEntry; update: ListUpdat
             {...code}
           />
         </label>
+        <button type="button" className={w.dupButton} onClick={onDuplicate} title="Créer une copie pour en faire une variante">
+          ⧉ Dupliquer
+        </button>
         <LangToggle value={entry.doc.lang} onChange={(lang) => setDoc((d) => ({ ...d, lang }))} />
       </div>
       <ObjectForm doc={entry.doc} setDoc={setDoc} />
@@ -361,6 +379,11 @@ export function FunctionsTab({
     update((l) => removeItem(l, id));
     if (selected?.id === id) onSelect(null);
   };
+  const duplicate = (id: string) => {
+    const { list, copyId } = duplicateFunction(functions, id);
+    update(() => list);
+    onSelect(copyId);
+  };
 
   return (
     <>
@@ -373,7 +396,7 @@ export function FunctionsTab({
         addLabel="Fonction"
       />
       {selected ? (
-        <FunctionEditor key={selected.id} entry={selected} update={update} />
+        <FunctionEditor key={selected.id} entry={selected} update={update} onDuplicate={() => duplicate(selected.id)} />
       ) : (
         <p className={w.emptyState}>Aucune fonction. Ajoute-en une pour générer son TSDoc.</p>
       )}
@@ -381,7 +404,15 @@ export function FunctionsTab({
   );
 }
 
-function FunctionEditor({ entry, update }: { entry: FunctionEntry; update: ListUpdater<FunctionEntry> }) {
+function FunctionEditor({
+  entry,
+  update,
+  onDuplicate,
+}: {
+  entry: FunctionEntry;
+  update: ListUpdater<FunctionEntry>;
+  onDuplicate: () => void;
+}) {
   const setDoc = docSetter<FunctionDoc, FunctionEntry>(update, entry.id);
   const isTs = entry.doc.lang === 'ts';
   return (
@@ -396,6 +427,9 @@ function FunctionEditor({ entry, update }: { entry: FunctionEntry; update: ListU
             {...code}
           />
         </label>
+        <button type="button" className={w.dupButton} onClick={onDuplicate} title="Créer une copie pour en faire une variante">
+          ⧉ Dupliquer
+        </button>
         <LangToggle value={entry.doc.lang} onChange={(lang) => setDoc((d) => ({ ...d, lang }))} />
       </div>
       <DocForm doc={entry.doc} setDoc={setDoc} />

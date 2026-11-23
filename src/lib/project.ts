@@ -106,6 +106,44 @@ export const newFunctionEntry = (list: FunctionEntry[]): FunctionEntry => ({
   doc: emptyDoc(),
 });
 
+/* ——— Duplication ——— */
+
+/** Insère `item` juste après l'élément `afterId`. */
+const insertAfter = <T extends { id: string }>(list: T[], afterId: string, item: T): T[] => {
+  const i = list.findIndex((x) => x.id === afterId);
+  return i < 0 ? [...list, item] : [...list.slice(0, i + 1), item, ...list.slice(i + 1)];
+};
+
+/** Copie d'un objet (nouveaux identifiants internes, nouvel ID métier), placée juste après l'original. */
+export function duplicateObject(list: ObjectEntry[], id: string): { list: ObjectEntry[]; copyId: string | null } {
+  const src = list.find((o) => o.id === id);
+  if (!src) return { list, copyId: null };
+  const copy: ObjectEntry = {
+    id: uid(),
+    objectId: newObjectEntry(list).objectId,
+    doc: { ...src.doc, properties: src.doc.properties.map((p) => ({ ...p, id: uid() })) },
+  };
+  return { list: insertAfter(list, id, copy), copyId: copy.id };
+}
+
+/** Copie d'une fonction, placée juste après l'originale. */
+export function duplicateFunction(list: FunctionEntry[], id: string): { list: FunctionEntry[]; copyId: string | null } {
+  const src = list.find((f) => f.id === id);
+  if (!src) return { list, copyId: null };
+  const d = src.doc;
+  const copy: FunctionEntry = {
+    id: uid(),
+    functionId: newFunctionEntry(list).functionId,
+    doc: {
+      ...d,
+      params: d.params.map((p) => ({ ...p, id: uid() })),
+      typeParams: d.typeParams.map((t) => ({ ...t, id: uid() })),
+      throws: d.throws.map((t) => ({ ...t, id: uid() })),
+    },
+  };
+  return { list: insertAfter(list, id, copy), copyId: copy.id };
+}
+
 /* ——— Relecture des données stockées ——— */
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;

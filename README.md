@@ -23,6 +23,12 @@ Format du JSON exporté :
 
 Tout tourne dans le navigateur (projet en cours et projets enregistrés dans `localStorage`), sans backend.
 
+### Réutiliser et modifier
+
+- **⧉ Dupliquer** (objet ou fonction) : crée une copie juste après l'original, pour en faire une variante.
+- **✎ Modifier** (panneau JSON) : édite le JSON à la main, puis **Appliquer** (ou Ctrl+Entrée) met à jour les onglets.
+- **Importer** : recharge un `.json` exporté par l'outil. Les `objectType` (type TS ou classe C#) et les `doc` (TSDoc ou XML `///`) sont relus pour remplir les formulaires ; ce qui ne peut pas être relu est signalé.
+
 ## Développement
 
 ```bash

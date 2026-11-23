@@ -20,7 +20,7 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-function CopyButton({ text, label, primary }: { text: string; label: string; primary?: boolean }) {
+export function CopyButton({ text, label, primary }: { text: string; label: string; primary?: boolean }) {
   const [state, setState] = useState<'idle' | 'ok' | 'ko'>('idle');
   const onClick = async () => {
     setState((await copyText(text)) ? 'ok' : 'ko');
@@ -33,7 +33,7 @@ function CopyButton({ text, label, primary }: { text: string; label: string; pri
   );
 }
 
-function download(filename: string, content: string) {
+export function download(filename: string, content: string) {
   const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
@@ -89,7 +89,7 @@ async function saveAs(filename: string, content: string, extension: string): Pro
   }
 }
 
-function SaveAsButton({ filename, content, extension }: { filename: string; content: string; extension: string }) {
+export function SaveAsButton({ filename, content, extension }: { filename: string; content: string; extension: string }) {
   const [state, setState] = useState<'idle' | 'ok' | 'ko'>('idle');
   const supported = Boolean(saveFilePicker());
   const onClick = async () => {

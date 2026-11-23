@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import s from './App.module.css';
 import { HistoryPanel } from './components/HistoryPanel';
-import { OutputPanel } from './components/OutputPanel';
+import { JsonPanel, type Notice } from './components/JsonPanel';
 import { EndpointsTab, FunctionsTab, MessagesTab, ObjectsTab } from './components/ProjectTabs';
 import w from './components/Workspace.module.css';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -13,6 +13,7 @@ import {
   reviveSavedProjects,
   validateProject,
 } from './lib/project';
+import { parseProjectJson } from './lib/importJson';
 import { uid } from './lib/text';
 import { validate, validateObject } from './lib/validate';
 import type { ProjectDoc, SavedProject, Tab } from './types';
@@ -35,6 +36,8 @@ export default function App() {
   const [selectedObject, setSelectedObject] = useState<string | null>(null);
   const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const json = useMemo(() => generateProjectJson(project), [project]);
   const issues = useMemo(() => validateProject(project), [project]);
@@ -74,6 +77,37 @@ export default function App() {
     setSelectedFunction(null);
   };
 
+  /** Remplace le projet par le JSON donné. Renvoie un message d'erreur, ou null si c'est appliqué. */
+  const applyJson = (text: string, source: 'edit' | 'import'): string | null => {
+    try {
+      const { project: next, warnings } = parseProjectJson(text);
+      setProject(next);
+      setSelectedObject(null);
+      setSelectedFunction(null);
+      setNotice({
+        level: warnings.length ? 'warning' : 'success',
+        title:
+          (source === 'import' ? '✓ JSON importé' : '✓ Modifications appliquées') +
+          (warnings.length ? ` — ${warnings.length} point(s) à vérifier` : ''),
+        lines: warnings,
+      });
+      return null;
+    } catch (e) {
+      return (e as Error).message;
+    }
+  };
+
+  const isEmpty =
+    !project.title.trim() &&
+    project.endpoints.length + project.objects.length + project.functions.length + project.messages.length === 0;
+
+  const importFile = async (file: File) => {
+    if (!isEmpty && !window.confirm(`Importer « ${file.name} » ? Le projet en cours sera remplacé (enregistre-le avant si besoin).`))
+      return;
+    const error = applyJson(await file.text(), 'import');
+    if (error) setNotice({ level: 'error', title: `Import de « ${file.name} » impossible`, lines: [error] });
+  };
+
   const load = (item: SavedProject) => {
     if (!window.confirm(`Ouvrir « ${item.project.title || 'Sans titre'} » ? Le projet en cours sera remplacé.`)) return;
     setProject(reviveProject(item.project));
@@ -99,6 +133,25 @@ export default function App() {
           <button type="button" className={s.secondary} onClick={reset}>
             Nouveau
           </button>
+          <button
+            type="button"
+            className={s.secondary}
+            onClick={() => fileInput.current?.click()}
+            title="Ouvrir un fichier .json exporté par l'outil"
+          >
+            Importer
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = ''; // permet de réimporter le même fichier
+              if (file) void importFile(file);
+            }}
+          />
           <button type="button" className={s.primary} onClick={save} title="Enregistrer le projet dans ce navigateur">
             {savedFlash ? '✓ Enregistré' : 'Enregistrer'}
           </button>
@@ -155,7 +208,14 @@ export default function App() {
         </div>
 
         <aside className={s.outputColumn}>
-          <OutputPanel output={json} issues={issues} name={project.title} extension="json" what="le JSON" withSaveAs />
+          <JsonPanel
+            json={json}
+            issues={issues}
+            title={project.title}
+            notice={notice}
+            onDismissNotice={() => setNotice(null)}
+            onApply={(text) => applyJson(text, 'edit')}
+          />
           <HistoryPanel
             history={saved}
             onLoad={load}
