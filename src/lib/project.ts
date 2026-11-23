@@ -1,6 +1,7 @@
 import type {
   EndpointDoc,
   EndpointPayload,
+  EndpointType,
   FunctionEntry,
   HttpMethod,
   Issue,
@@ -35,6 +36,19 @@ function nextId(used: string[], format: (n: number) => string, start = used.leng
   return format(n);
 }
 
+export const ENDPOINT_TYPES: { value: EndpointType; label: string }[] = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'non-standard', label: 'Non standard' },
+];
+
+/** « standard », « Non standard », « nonStandard »… → type connu, ou null. */
+export function parseEndpointType(raw: string): EndpointType | null {
+  const t = raw.trim().toLowerCase().replace(/[\s_-]+/g, '');
+  if (t === 'standard' || t === 'standar') return 'standard';
+  if (t === 'nonstandard' || t === 'nonstandar') return 'non-standard';
+  return null;
+}
+
 export const PAYLOAD_KEYS: (keyof EndpointPayload)[] = ['assembly', 'action', 'configurations', 'applyAll'];
 
 export const emptyPayload = (): EndpointPayload => ({ assembly: '', action: '', configurations: '', applyAll: '' });
@@ -45,9 +59,10 @@ export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
     list.map((e) => e.requestId),
     (n) => pad(n, 3),
   ),
-  type: '',
+  type: 'standard',
   method: 'GET',
   url: '',
+  payloadText: '',
   payload: emptyPayload(),
 });
 
@@ -169,9 +184,11 @@ export function reviveProject(raw: unknown): ProjectDoc {
     endpoints: list(raw.endpoints).map((e) => ({
       id: str(e.id) || uid(),
       requestId: str(e.requestId),
-      type: str(e.type),
+      // Avant ce champ, seul le payload détaillé existait : non standard par défaut.
+      type: parseEndpointType(str(e.type)) ?? 'non-standard',
       method: HTTP_METHODS.includes(e.method as HttpMethod) ? (e.method as HttpMethod) : 'GET',
       url: str(e.url),
+      payloadText: str(e.payloadText),
       payload: revivePayload(e.payload),
     })),
     objects: list(raw.objects).map((o) => ({ id: str(o.id) || uid(), objectId: str(o.objectId), doc: reviveObject(o.doc) })),
@@ -251,15 +268,18 @@ export function generateProjectJson(p: ProjectDoc): string {
     {
       endpoint: p.endpoints.map((e) => ({
         requestId: e.requestId.trim(),
-        type: e.type.trim(),
+        type: e.type,
         method: e.method,
         endpoint: e.url.trim(),
-        payload: {
-          assembly: e.payload.assembly.trim(),
-          action: e.payload.action.trim(),
-          configurations: e.payload.configurations.trim(),
-          applyAll: e.payload.applyAll.trim(),
-        },
+        payload:
+          e.type === 'standard'
+            ? e.payloadText.trim()
+            : {
+                assembly: e.payload.assembly.trim(),
+                action: e.payload.action.trim(),
+                configurations: e.payload.configurations.trim(),
+                applyAll: e.payload.applyAll.trim(),
+              },
       })),
     },
     {

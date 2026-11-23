@@ -6,6 +6,7 @@ import { generateObjectCode } from '../lib/objectCode';
 import {
   duplicateFunction,
   duplicateObject,
+  ENDPOINT_TYPES,
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
@@ -18,6 +19,7 @@ import { validate, validateObject } from '../lib/validate';
 import type {
   EndpointDoc,
   EndpointPayload,
+  EndpointType,
   FunctionDoc,
   FunctionEntry,
   HttpMethod,
@@ -105,34 +107,54 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
               <div className={w.endpointDetails}>
                 <label className={w.kvField}>
                   <span>type</span>
-                  <input
-                    className={`${f.input} ${f.mono}`}
+                  <select
+                    className={`${w.select} ${w.typeSelect}`}
                     value={e.type}
-                    onChange={(ev) => patch({ type: ev.target.value })}
+                    onChange={(ev) => patch({ type: ev.target.value as EndpointType })}
                     aria-label={`Type de ${label}`}
-                    {...code}
-                  />
+                  >
+                    {ENDPOINT_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-                <fieldset className={w.payload}>
-                  <legend>payload</legend>
-                  {PAYLOAD_KEYS.map((k) => (
-                    <label key={k} className={w.kvField}>
-                      <span>{k}</span>
-                      <input
-                        className={`${f.input} ${f.mono}`}
-                        value={e.payload[k]}
-                        aria-label={`payload.${k} de ${label}`}
-                        onChange={(ev) => {
-                          const value = ev.target.value;
-                          update((l) =>
-                            l.map((x) => (x.id === e.id ? { ...x, payload: { ...x.payload, [k]: value } as EndpointPayload } : x)),
-                          );
-                        }}
-                        {...code}
-                      />
-                    </label>
-                  ))}
-                </fieldset>
+                {e.type === 'standard' ? (
+                  <label className={w.kvField}>
+                    <span>payload</span>
+                    <input
+                      className={`${f.input} ${f.mono}`}
+                      value={e.payloadText}
+                      onChange={(ev) => patch({ payloadText: ev.target.value })}
+                      aria-label={`Payload de ${label}`}
+                      {...code}
+                    />
+                  </label>
+                ) : (
+                  <fieldset className={w.payload}>
+                    <legend>payload</legend>
+                    {PAYLOAD_KEYS.map((k) => (
+                      <label key={k} className={w.kvField}>
+                        <span>{k}</span>
+                        <input
+                          className={`${f.input} ${f.mono}`}
+                          value={e.payload[k]}
+                          aria-label={`payload.${k} de ${label}`}
+                          onChange={(ev) => {
+                            const value = ev.target.value;
+                            update((l) =>
+                              l.map((x) =>
+                                x.id === e.id ? { ...x, payload: { ...x.payload, [k]: value } as EndpointPayload } : x,
+                              ),
+                            );
+                          }}
+                          {...code}
+                        />
+                      </label>
+                    ))}
+                  </fieldset>
+                )}
               </div>
             </div>
           );

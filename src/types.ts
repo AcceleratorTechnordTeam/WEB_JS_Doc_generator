@@ -63,6 +63,8 @@ export interface ObjectDoc {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /** Corps de la requête documenté avec l'endpoint. */
+export type EndpointType = 'standard' | 'non-standard';
+
 export interface EndpointPayload {
   assembly: string;
   action: string;
@@ -73,10 +75,13 @@ export interface EndpointPayload {
 export interface EndpointDoc {
   id: string;
   requestId: string;
-  /** Type libre de la requête (distinct de la méthode HTTP). */
-  type: string;
+  /** standard : payload = un texte ; non-standard : payload = { assembly, action… }. */
+  type: EndpointType;
   method: HttpMethod;
   url: string;
+  /** Payload d'un endpoint standard. */
+  payloadText: string;
+  /** Payload d'un endpoint non standard. */
   payload: EndpointPayload;
 }
 

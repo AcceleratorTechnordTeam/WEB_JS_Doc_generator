@@ -4,7 +4,7 @@
  */
 import type { FunctionDoc, Lang, ObjectDoc, ParamDoc, ProjectDoc, PropertyDoc } from '../types';
 import { emptyDoc, emptyObject, newParam, newProperty, newThrows, newTypeParam } from './defaults';
-import { HTTP_METHODS, PAYLOAD_KEYS, reviveProject } from './project';
+import { HTTP_METHODS, parseEndpointType, PAYLOAD_KEYS, reviveProject } from './project';
 import { toLines, trimBlock, uid } from './text';
 
 export interface ImportResult {
@@ -306,19 +306,32 @@ export function parseProjectJson(text: string): ImportResult {
     }
     const known = !method || (HTTP_METHODS as string[]).includes(method);
     if (!known) warnings.push(`Endpoint ${label} : méthode « ${method} » inconnue, remplacée par GET.`);
-    let payload: Record<string, unknown> = {};
-    if (isRecord(e.payload)) payload = e.payload;
-    else if (e.payload !== undefined && e.payload !== '') warnings.push(`Endpoint ${label} : « payload » ignoré, ce n'est pas un objet.`);
-    const extra = Object.keys(payload).filter((k) => !(PAYLOAD_KEYS as string[]).includes(k));
-    if (extra.length) warnings.push(`Endpoint ${label} : clé(s) de payload ignorée(s) : ${extra.join(', ')}.`);
     // Une valeur non texte (booléen, objet…) est gardée telle quelle, en JSON.
     const value = (v: unknown) => (typeof v === 'string' ? v : v === undefined || v === null ? '' : JSON.stringify(v));
+    // Type absent ou inconnu : déduit de la forme du payload (objet → non standard).
+    let kind = parseEndpointType(type);
+    if (!kind) {
+      kind = isRecord(e.payload) ? 'non-standard' : 'standard';
+      if (type.trim()) warnings.push(`Endpoint ${label} : type « ${type} » inconnu, remplacé par « ${kind} ».`);
+    }
+    let payload: Record<string, unknown> = {};
+    let payloadText = '';
+    if (kind === 'non-standard') {
+      if (isRecord(e.payload)) payload = e.payload;
+      else if (e.payload !== undefined && e.payload !== '')
+        warnings.push(`Endpoint ${label} : payload non standard attendu sous forme d'objet, valeur ignorée.`);
+      const extra = Object.keys(payload).filter((k) => !(PAYLOAD_KEYS as string[]).includes(k));
+      if (extra.length) warnings.push(`Endpoint ${label} : clé(s) de payload ignorée(s) : ${extra.join(', ')}.`);
+    } else {
+      payloadText = value(e.payload);
+    }
     return {
       id: uid(),
       requestId: str(e.requestId),
-      type,
+      type: kind,
       method: known && method ? method : 'GET',
       url: str(e.endpoint ?? e.url),
+      payloadText,
       payload: Object.fromEntries(PAYLOAD_KEYS.map((k) => [k, value(payload[k])])),
     };
   });
