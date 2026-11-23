@@ -4,7 +4,7 @@
 
 Outil React + Vite qui décrit un projet et exporte un **JSON final** standardisé. Un titre général, puis un onglet par catégorie :
 
-- **Endpoints** — identifiant, méthode HTTP, URL.
+- **Endpoints** — identifiant, type, méthode HTTP, URL et payload (`assembly`, `action`, `configurations`, `applyAll`).
 - **Objets** — type TypeScript documenté en JSDoc (ou classe C# documentée en commentaires XML).
 - **Fonctions** — commentaire TSDoc, avec le type des paramètres et du retour (`@param {string} nom`, `@returns {string | null}`) quand il est renseigné (ou commentaires XML `///` en C#), copiable seul.
 - **Messages** — identifiant, type (erreur, succès, warning, info) et texte.
@@ -14,7 +14,8 @@ Format du JSON exporté :
 ```json
 [
     { "title": "Declare Activity" },
-    { "endpoint": [{ "requestId": "001", "type": "GET", "endpoint": "url.example" }] },
+    { "endpoint": [{ "requestId": "001", "type": "…", "method": "POST", "endpoint": "url.example",
+                    "payload": { "assembly": "…", "action": "…", "configurations": "…", "applyAll": "…" } }] },
     { "object": [{ "objectId": "Object 01", "objectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
     { "messages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }

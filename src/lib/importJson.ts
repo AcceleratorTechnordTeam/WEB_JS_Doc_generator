@@ -4,7 +4,7 @@
  */
 import type { FunctionDoc, Lang, ObjectDoc, ParamDoc, ProjectDoc, PropertyDoc } from '../types';
 import { emptyDoc, emptyObject, newParam, newProperty, newThrows, newTypeParam } from './defaults';
-import { HTTP_METHODS, reviveProject } from './project';
+import { HTTP_METHODS, PAYLOAD_KEYS, reviveProject } from './project';
 import { toLines, trimBlock, uid } from './text';
 
 export interface ImportResult {
@@ -296,10 +296,31 @@ export function parseProjectJson(text: string): ImportResult {
   };
 
   const endpoints = list(pick('endpoint', 'endpoints'), 'endpoint').map((e, i) => {
-    const method = str(e.type ?? e.method ?? 'GET').toUpperCase();
-    const known = (HTTP_METHODS as string[]).includes(method);
-    if (!known) warnings.push(`Endpoint ${str(e.requestId) || i + 1} : méthode « ${method} » inconnue, remplacée par GET.`);
-    return { id: uid(), requestId: str(e.requestId), method: known ? method : 'GET', url: str(e.endpoint ?? e.url) };
+    const label = str(e.requestId) || i + 1;
+    let type = str(e.type);
+    let method = str(e.method).trim().toUpperCase();
+    // Ancien format : la méthode HTTP était rangée dans « type ».
+    if (!method && (HTTP_METHODS as string[]).includes(type.trim().toUpperCase())) {
+      method = type.trim().toUpperCase();
+      type = '';
+    }
+    const known = !method || (HTTP_METHODS as string[]).includes(method);
+    if (!known) warnings.push(`Endpoint ${label} : méthode « ${method} » inconnue, remplacée par GET.`);
+    let payload: Record<string, unknown> = {};
+    if (isRecord(e.payload)) payload = e.payload;
+    else if (e.payload !== undefined && e.payload !== '') warnings.push(`Endpoint ${label} : « payload » ignoré, ce n'est pas un objet.`);
+    const extra = Object.keys(payload).filter((k) => !(PAYLOAD_KEYS as string[]).includes(k));
+    if (extra.length) warnings.push(`Endpoint ${label} : clé(s) de payload ignorée(s) : ${extra.join(', ')}.`);
+    // Une valeur non texte (booléen, objet…) est gardée telle quelle, en JSON.
+    const value = (v: unknown) => (typeof v === 'string' ? v : v === undefined || v === null ? '' : JSON.stringify(v));
+    return {
+      id: uid(),
+      requestId: str(e.requestId),
+      type,
+      method: known && method ? method : 'GET',
+      url: str(e.endpoint ?? e.url),
+      payload: Object.fromEntries(PAYLOAD_KEYS.map((k) => [k, value(payload[k])])),
+    };
   });
 
   const objects = list(pick('object', 'objects'), 'object').map((o, i) => {

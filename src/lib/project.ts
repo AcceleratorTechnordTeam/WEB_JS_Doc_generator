@@ -1,5 +1,6 @@
 import type {
   EndpointDoc,
+  EndpointPayload,
   FunctionEntry,
   HttpMethod,
   Issue,
@@ -34,14 +35,20 @@ function nextId(used: string[], format: (n: number) => string, start = used.leng
   return format(n);
 }
 
+export const PAYLOAD_KEYS: (keyof EndpointPayload)[] = ['assembly', 'action', 'configurations', 'applyAll'];
+
+export const emptyPayload = (): EndpointPayload => ({ assembly: '', action: '', configurations: '', applyAll: '' });
+
 export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
   id: uid(),
   requestId: nextId(
     list.map((e) => e.requestId),
     (n) => pad(n, 3),
   ),
+  type: '',
   method: 'GET',
   url: '',
+  payload: emptyPayload(),
 });
 
 export const MESSAGE_TYPES: { value: MessageType; label: string; legacyPrefix: string }[] = [
@@ -150,6 +157,11 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 const list = (v: unknown) => (Array.isArray(v) ? v.filter(isRecord) : []);
 
+const revivePayload = (v: unknown): EndpointPayload => {
+  const raw = isRecord(v) ? v : {};
+  return { assembly: str(raw.assembly), action: str(raw.action), configurations: str(raw.configurations), applyAll: str(raw.applyAll) };
+};
+
 export function reviveProject(raw: unknown): ProjectDoc {
   if (!isRecord(raw)) return emptyProject();
   return {
@@ -157,8 +169,10 @@ export function reviveProject(raw: unknown): ProjectDoc {
     endpoints: list(raw.endpoints).map((e) => ({
       id: str(e.id) || uid(),
       requestId: str(e.requestId),
+      type: str(e.type),
       method: HTTP_METHODS.includes(e.method as HttpMethod) ? (e.method as HttpMethod) : 'GET',
       url: str(e.url),
+      payload: revivePayload(e.payload),
     })),
     objects: list(raw.objects).map((o) => ({ id: str(o.id) || uid(), objectId: str(o.objectId), doc: reviveObject(o.doc) })),
     functions: list(raw.functions).map((f) => ({
@@ -235,7 +249,18 @@ export function generateProjectJson(p: ProjectDoc): string {
   const data = [
     { title: p.title.trim() },
     {
-      endpoint: p.endpoints.map((e) => ({ requestId: e.requestId.trim(), type: e.method, endpoint: e.url.trim() })),
+      endpoint: p.endpoints.map((e) => ({
+        requestId: e.requestId.trim(),
+        type: e.type.trim(),
+        method: e.method,
+        endpoint: e.url.trim(),
+        payload: {
+          assembly: e.payload.assembly.trim(),
+          action: e.payload.action.trim(),
+          configurations: e.payload.configurations.trim(),
+          applyAll: e.payload.applyAll.trim(),
+        },
+      })),
     },
     {
       object: p.objects.map((o) => ({

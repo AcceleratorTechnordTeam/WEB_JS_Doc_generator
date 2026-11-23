@@ -9,6 +9,7 @@ import {
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
+  PAYLOAD_KEYS,
   newFunctionEntry,
   newMessage,
   newObjectEntry,
@@ -16,6 +17,7 @@ import {
 import { validate, validateObject } from '../lib/validate';
 import type {
   EndpointDoc,
+  EndpointPayload,
   FunctionDoc,
   FunctionEntry,
   HttpMethod,
@@ -100,6 +102,38 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
                 onUp={i > 0 ? () => update((l) => moveItem(l, e.id, -1)) : null}
                 onDown={i < endpoints.length - 1 ? () => update((l) => moveItem(l, e.id, 1)) : null}
               />
+              <div className={w.endpointDetails}>
+                <label className={w.kvField}>
+                  <span>type</span>
+                  <input
+                    className={`${f.input} ${f.mono}`}
+                    value={e.type}
+                    onChange={(ev) => patch({ type: ev.target.value })}
+                    aria-label={`Type de ${label}`}
+                    {...code}
+                  />
+                </label>
+                <fieldset className={w.payload}>
+                  <legend>payload</legend>
+                  {PAYLOAD_KEYS.map((k) => (
+                    <label key={k} className={w.kvField}>
+                      <span>{k}</span>
+                      <input
+                        className={`${f.input} ${f.mono}`}
+                        value={e.payload[k]}
+                        aria-label={`payload.${k} de ${label}`}
+                        onChange={(ev) => {
+                          const value = ev.target.value;
+                          update((l) =>
+                            l.map((x) => (x.id === e.id ? { ...x, payload: { ...x.payload, [k]: value } as EndpointPayload } : x)),
+                          );
+                        }}
+                        {...code}
+                      />
+                    </label>
+                  ))}
+                </fieldset>
+              </div>
             </div>
           );
         })}
