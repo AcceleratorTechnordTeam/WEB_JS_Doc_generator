@@ -328,6 +328,7 @@ export function parseProjectJson(text: string): ImportResult {
     return {
       id: uid(),
       requestId: str(e.requestId),
+      name: str(e.endpointName ?? e.name),
       type: kind,
       method: known && method ? method : 'GET',
       url: str(e.endpoint ?? e.url),

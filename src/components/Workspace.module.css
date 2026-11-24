@@ -88,15 +88,27 @@
 
 /* ——— Lignes simples (endpoints, messages) ——— */
 
+/* Ordre des enfants : id, nom, méthode, URL, actions, détails (type + payload). */
 .endpointLine {
   display: grid;
-  grid-template-columns: 64px 92px minmax(0, 1fr) auto;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'id name actions'
+    'method url url'
+    'details details details';
   gap: 4px;
   align-items: center;
   padding-left: 8px;
   border-left: 3px solid var(--accent-soft);
   border-radius: 2px;
 }
+
+.endpointLine > :nth-child(1) { grid-area: id; }
+.endpointLine > :nth-child(2) { grid-area: name; font-weight: 600; }
+.endpointLine > :nth-child(3) { grid-area: method; }
+.endpointLine > :nth-child(4) { grid-area: url; }
+.endpointLine > :nth-child(5) { grid-area: actions; }
+.endpointLine > :nth-child(6) { grid-area: details; }
 
 .endpointLine + .endpointLine {
   margin-top: 10px;
@@ -105,7 +117,6 @@
 /* 2e ligne : type + payload, chaque champ avec sa clé JSON au-dessus. */
 .endpointDetails {
   display: grid;
-  grid-column: 1 / -1;
   grid-template-columns: 120px minmax(0, 1fr);
   gap: 6px;
   align-items: end;
@@ -392,15 +403,6 @@
 }
 
 @media (max-width: 560px) {
-  .endpointLine {
-    grid-template-columns: 64px 88px auto;
-  }
-
-  .endpointLine > :nth-child(3) {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
   .endpointDetails {
     grid-template-columns: 1fr;
   }

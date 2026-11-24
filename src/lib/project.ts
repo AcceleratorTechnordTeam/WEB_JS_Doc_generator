@@ -59,6 +59,7 @@ export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
     list.map((e) => e.requestId),
     (n) => pad(n, 3),
   ),
+  name: '',
   type: 'standard',
   method: 'GET',
   url: '',
@@ -184,6 +185,7 @@ export function reviveProject(raw: unknown): ProjectDoc {
     endpoints: list(raw.endpoints).map((e) => ({
       id: str(e.id) || uid(),
       requestId: str(e.requestId),
+      name: str(e.name),
       // Avant ce champ, seul le payload détaillé existait : non standard par défaut.
       type: parseEndpointType(str(e.type)) ?? 'non-standard',
       method: HTTP_METHODS.includes(e.method as HttpMethod) ? (e.method as HttpMethod) : 'GET',
@@ -268,6 +270,7 @@ export function generateProjectJson(p: ProjectDoc): string {
     {
       endpoint: p.endpoints.map((e) => ({
         requestId: e.requestId.trim(),
+        endpointName: e.name.trim(),
         type: e.type,
         method: e.method,
         endpoint: e.url.trim(),
@@ -324,6 +327,7 @@ export function validateProject(p: ProjectDoc): Issue[] {
   p.endpoints.forEach((e, i) => {
     const label = e.requestId.trim() || `n°${i + 1}`;
     if (!e.requestId.trim()) error(`L'endpoint n°${i + 1} n'a pas d'identifiant.`);
+    if (!e.name.trim()) warn(`L'endpoint ${label} n'a pas de nom.`);
     if (!e.url.trim()) error(`L'endpoint ${label} n'a pas d'URL.`);
   });
   p.messages.forEach((m, i) => {

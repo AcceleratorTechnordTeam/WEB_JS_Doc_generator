@@ -66,7 +66,7 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
       >
         {endpoints.length === 0 && <p className={f.empty}>Aucun endpoint.</p>}
         {endpoints.map((e, i) => {
-          const label = `l'endpoint ${e.requestId || i + 1}`;
+          const label = `l'endpoint ${e.name.trim() || e.requestId || i + 1}`;
           const patch = (v: Partial<EndpointDoc>) => update((l) => patchItem(l, e.id, v));
           return (
             <div key={e.id} className={w.endpointLine}>
@@ -77,6 +77,15 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
                 placeholder="001"
                 aria-label={`Identifiant de ${label}`}
                 {...code}
+              />
+              <input
+                className={f.input}
+                value={e.name}
+                onChange={(ev) => patch({ name: ev.target.value })}
+                placeholder="Nom de l'endpoint"
+                aria-label={`Nom de ${label}`}
+                spellCheck={false}
+                autoComplete="off"
               />
               <select
                 className={`${w.select} ${METHOD_CLASS[e.method]}`}

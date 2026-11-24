@@ -75,6 +75,8 @@ export interface EndpointPayload {
 export interface EndpointDoc {
   id: string;
   requestId: string;
+  /** Nom lisible du call, ex. « Get activities ». */
+  name: string;
   /** standard : payload = un texte ; non-standard : payload = { assembly, action… }. */
   type: EndpointType;
   method: HttpMethod;
