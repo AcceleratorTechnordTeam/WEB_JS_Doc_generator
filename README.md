@@ -15,7 +15,7 @@ Format du JSON exporté :
 [
     { "title": "Declare Activity" },
     { "endpoint": [{ "requestId": "001", "endpointName": "Get activities", "type": "non-standard", "method": "POST", "endpoint": "url.example",
-                    "payload": { "assembly": "…", "action": "…", "configurations": "…", "applyAll": "…" } }] },
+                    "payload": { "assembly": "…", "action": "…", "configurations": [{}], "applyAll": "…" } }] },
     { "object": [{ "objectId": "Object 01", "objectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
     { "messages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }

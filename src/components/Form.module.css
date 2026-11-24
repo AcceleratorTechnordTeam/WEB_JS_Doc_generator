@@ -301,3 +301,8 @@
     padding-left: 0;
   }
 }
+
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger-soft);
+}

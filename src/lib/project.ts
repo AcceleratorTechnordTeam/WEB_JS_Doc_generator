@@ -51,6 +51,20 @@ export function parseEndpointType(raw: string): EndpointType | null {
 
 export const PAYLOAD_KEYS: (keyof EndpointPayload)[] = ['assembly', 'action', 'configurations', 'applyAll'];
 
+/**
+ * « configurations » est du vrai JSON à envoyer : on l'exporte tel quel (sans guillemets).
+ * Vide → chaîne vide ; JSON invalide → gardé en texte (et signalé par la validation).
+ */
+export function parseConfigurations(raw: string): { value: unknown; valid: boolean } {
+  const text = raw.trim();
+  if (!text) return { value: '', valid: true };
+  try {
+    return { value: JSON.parse(text), valid: true };
+  } catch {
+    return { value: text, valid: false };
+  }
+}
+
 export const emptyPayload = (): EndpointPayload => ({ assembly: '', action: '', configurations: '', applyAll: '' });
 
 export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
@@ -280,7 +294,7 @@ export function generateProjectJson(p: ProjectDoc): string {
             : {
                 assembly: e.payload.assembly.trim(),
                 action: e.payload.action.trim(),
-                configurations: e.payload.configurations.trim(),
+                configurations: parseConfigurations(e.payload.configurations).value,
                 applyAll: e.payload.applyAll.trim(),
               },
       })),
@@ -329,6 +343,8 @@ export function validateProject(p: ProjectDoc): Issue[] {
     if (!e.requestId.trim()) error(`L'endpoint n°${i + 1} n'a pas d'identifiant.`);
     if (!e.name.trim()) warn(`L'endpoint ${label} n'a pas de nom.`);
     if (!e.url.trim()) error(`L'endpoint ${label} n'a pas d'URL.`);
+    if (e.type === 'non-standard' && !parseConfigurations(e.payload.configurations).valid)
+      error(`L'endpoint ${label} : « configurations » n'est pas un JSON valide (ex. [{}]).`);
   });
   p.messages.forEach((m, i) => {
     const label = m.messageId.trim() || `n°${i + 1}`;

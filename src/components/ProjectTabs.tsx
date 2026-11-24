@@ -7,6 +7,7 @@ import {
   duplicateFunction,
   duplicateObject,
   ENDPOINT_TYPES,
+  parseConfigurations,
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
@@ -148,6 +149,8 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
                         <span>{k}</span>
                         <input
                           className={`${f.input} ${f.mono}`}
+                          aria-invalid={k === 'configurations' && !parseConfigurations(e.payload[k]).valid}
+                          placeholder={k === 'configurations' ? '[{}]' : undefined}
                           value={e.payload[k]}
                           aria-label={`payload.${k} de ${label}`}
                           onChange={(ev) => {

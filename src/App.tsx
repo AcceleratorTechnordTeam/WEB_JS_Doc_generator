@@ -9,6 +9,7 @@ import {
   emptyProject,
   generateProjectJson,
   migrateLegacy,
+  parseConfigurations,
   reviveProject,
   reviveSavedProjects,
   validateProject,
@@ -45,7 +46,12 @@ export default function App() {
   /** Pastille rouge sur un onglet qui contient au moins une erreur. */
   const tabHasError: Record<Tab, boolean> = useMemo(
     () => ({
-      endpoints: project.endpoints.some((e) => !e.requestId.trim() || !e.url.trim()),
+      endpoints: project.endpoints.some(
+        (e) =>
+          !e.requestId.trim() ||
+          !e.url.trim() ||
+          (e.type === 'non-standard' && !parseConfigurations(e.payload.configurations).valid),
+      ),
       objects: project.objects.some((o) => validateObject(o.doc).some((i) => i.level === 'error')),
       functions: project.functions.some((x) => validate(x.doc).some((i) => i.level === 'error')),
       messages: project.messages.some((m) => !m.messageId.trim() || !m.message.trim()),
