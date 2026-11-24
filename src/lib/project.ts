@@ -89,9 +89,10 @@ export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
 });
 
 export const MESSAGE_TYPES: { value: MessageType; label: string; legacyPrefix: string }[] = [
-  { value: 'error', label: 'Erreur', legacyPrefix: 'Error message' },
-  { value: 'success', label: 'Succès', legacyPrefix: 'Success message' },
+  { value: 'critical', label: 'Critical', legacyPrefix: 'Critical message' },
+  { value: 'error', label: 'Error', legacyPrefix: 'Error message' },
   { value: 'warning', label: 'Warning', legacyPrefix: 'Warning message' },
+  { value: 'success', label: 'Success', legacyPrefix: 'Success message' },
   { value: 'info', label: 'Info', legacyPrefix: 'Info message' },
 ];
 
@@ -117,7 +118,8 @@ export const newMessage = (list: MessageDoc[], type: MessageType = 'error'): Mes
 
 /** Type d'un message stocké par une version antérieure : déduit de son ancien identifiant. */
 function reviveMessageType(raw: unknown, messageId: string): MessageType {
-  if (MESSAGE_TYPES.some((t) => t.value === raw)) return raw as MessageType;
+  const t = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+  if (MESSAGE_TYPES.some((m) => m.value === t)) return t as MessageType;
   return MESSAGE_TYPES.find((t) => messageId.startsWith(t.legacyPrefix))?.value ?? 'error';
 }
 

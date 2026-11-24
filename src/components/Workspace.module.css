@@ -194,6 +194,7 @@
 }
 
 /* Couleur par type de message : bordure de la ligne + sélecteur. */
+.msgCritical { --msg-color: #9f1239; --msg-soft: rgba(159, 18, 57, 0.14); }
 .msgError { --msg-color: var(--danger); --msg-soft: var(--danger-soft); }
 .msgSuccess { --msg-color: var(--success); --msg-soft: var(--success-soft); }
 .msgWarning { --msg-color: #d97706; --msg-soft: var(--warning-soft); }

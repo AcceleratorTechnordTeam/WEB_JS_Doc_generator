@@ -87,7 +87,7 @@ export interface EndpointDoc {
   payload: EndpointPayload;
 }
 
-export type MessageType = 'error' | 'success' | 'warning' | 'info';
+export type MessageType = 'critical' | 'error' | 'warning' | 'success' | 'info';
 
 export interface MessageDoc {
   id: string;

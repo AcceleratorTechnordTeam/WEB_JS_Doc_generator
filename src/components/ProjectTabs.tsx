@@ -48,6 +48,7 @@ const METHOD_CLASS: Record<HttpMethod, string> = {
   DELETE: w.delete,
 };
 const MESSAGE_CLASS: Record<MessageType, string> = {
+  critical: w.msgCritical,
   error: w.msgError,
   success: w.msgSuccess,
   warning: w.msgWarning,
