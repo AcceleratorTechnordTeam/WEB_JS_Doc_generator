@@ -4,7 +4,7 @@
  */
 import type { FunctionDoc, Lang, ObjectDoc, ParamDoc, ProjectDoc, PropertyDoc } from '../types';
 import { emptyDoc, emptyObject, newParam, newProperty, newThrows, newTypeParam } from './defaults';
-import { HTTP_METHODS, parseEndpointType, PAYLOAD_KEYS, reviveProject } from './project';
+import { HTTP_METHODS, parseEndpointType, PAYLOAD_KEYS, PAYLOAD_TEXT_KEYS, reviveProject, toBool } from './project';
 import { toLines, trimBlock, uid } from './text';
 
 export interface ImportResult {
@@ -333,7 +333,10 @@ export function parseProjectJson(text: string): ImportResult {
       method: known && method ? method : 'GET',
       url: str(e.endpoint ?? e.url),
       payloadText,
-      payload: Object.fromEntries(PAYLOAD_KEYS.map((k) => [k, value(payload[k])])),
+      payload: {
+        ...(Object.fromEntries(PAYLOAD_TEXT_KEYS.map((k) => [k, value(payload[k])])) as Record<(typeof PAYLOAD_TEXT_KEYS)[number], string>),
+        applyAll: toBool(payload.applyAll),
+      },
     };
   });
 

@@ -11,7 +11,7 @@ import {
   HTTP_METHODS,
   MESSAGE_TYPES,
   newEndpoint,
-  PAYLOAD_KEYS,
+  PAYLOAD_TEXT_KEYS,
   newFunctionEntry,
   newMessage,
   newObjectEntry,
@@ -144,7 +144,7 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
                 ) : (
                   <fieldset className={w.payload}>
                     <legend>payload</legend>
-                    {PAYLOAD_KEYS.map((k) => (
+                    {PAYLOAD_TEXT_KEYS.map((k) => (
                       <label key={k} className={w.kvField}>
                         <span>{k}</span>
                         <input
@@ -165,6 +165,23 @@ export function EndpointsTab({ endpoints, update }: { endpoints: EndpointDoc[]; 
                         />
                       </label>
                     ))}
+                    <label className={`${w.kvField} ${w.boolField}`}>
+                      <span>applyAll</span>
+                      <span className={w.boolBox}>
+                        <input
+                          type="checkbox"
+                          checked={e.payload.applyAll}
+                          aria-label={`payload.applyAll de ${label}`}
+                          onChange={(ev) => {
+                            const checked = ev.target.checked;
+                            update((l) =>
+                              l.map((x) => (x.id === e.id ? { ...x, payload: { ...x.payload, applyAll: checked } } : x)),
+                            );
+                          }}
+                        />
+                        {e.payload.applyAll ? 'true' : 'false'}
+                      </span>
+                    </label>
                   </fieldset>
                 )}
               </div>

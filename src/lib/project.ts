@@ -51,6 +51,13 @@ export function parseEndpointType(raw: string): EndpointType | null {
 
 export const PAYLOAD_KEYS: (keyof EndpointPayload)[] = ['assembly', 'action', 'configurations', 'applyAll'];
 
+/** Champs texte du payload (applyAll est un booléen, saisi par une case à cocher). */
+export const PAYLOAD_TEXT_KEYS = ['assembly', 'action', 'configurations'] as const;
+
+/** true, "true", 1… → true ; tout le reste → false. */
+export const toBool = (v: unknown): boolean =>
+  v === true || v === 1 || (typeof v === 'string' && ['true', '1', 'oui', 'yes'].includes(v.trim().toLowerCase()));
+
 /**
  * « configurations » est du vrai JSON à envoyer : on l'exporte tel quel (sans guillemets).
  * Vide → chaîne vide ; JSON invalide → gardé en texte (et signalé par la validation).
@@ -65,7 +72,7 @@ export function parseConfigurations(raw: string): { value: unknown; valid: boole
   }
 }
 
-export const emptyPayload = (): EndpointPayload => ({ assembly: '', action: '', configurations: '', applyAll: '' });
+export const emptyPayload = (): EndpointPayload => ({ assembly: '', action: '', configurations: '', applyAll: false });
 
 export const newEndpoint = (list: EndpointDoc[]): EndpointDoc => ({
   id: uid(),
@@ -189,7 +196,7 @@ const list = (v: unknown) => (Array.isArray(v) ? v.filter(isRecord) : []);
 
 const revivePayload = (v: unknown): EndpointPayload => {
   const raw = isRecord(v) ? v : {};
-  return { assembly: str(raw.assembly), action: str(raw.action), configurations: str(raw.configurations), applyAll: str(raw.applyAll) };
+  return { assembly: str(raw.assembly), action: str(raw.action), configurations: str(raw.configurations), applyAll: toBool(raw.applyAll) };
 };
 
 export function reviveProject(raw: unknown): ProjectDoc {
@@ -295,7 +302,7 @@ export function generateProjectJson(p: ProjectDoc): string {
                 assembly: e.payload.assembly.trim(),
                 action: e.payload.action.trim(),
                 configurations: parseConfigurations(e.payload.configurations).value,
-                applyAll: e.payload.applyAll.trim(),
+                applyAll: e.payload.applyAll,
               },
       })),
     },

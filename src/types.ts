@@ -69,7 +69,7 @@ export interface EndpointPayload {
   assembly: string;
   action: string;
   configurations: string;
-  applyAll: string;
+  applyAll: boolean;
 }
 
 export interface EndpointDoc {
