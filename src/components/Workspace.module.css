@@ -173,6 +173,38 @@
   white-space: nowrap;
 }
 
+/* SQL : id · nom · actions, puis description et code en pleine largeur. */
+.sqlLine {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 4px;
+  align-items: center;
+  padding-left: 8px;
+  border-left: 3px solid var(--accent-soft);
+  border-radius: 2px;
+}
+
+.sqlLine > :nth-child(2) {
+  font-weight: 600;
+}
+
+.sqlLine > :nth-child(n + 4) {
+  grid-column: 1 / -1;
+}
+
+.sqlLine + .sqlLine {
+  margin-top: 10px;
+}
+
+.sqlCode {
+  min-height: 96px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  line-height: 1.5;
+  tab-size: 4;
+  white-space: pre;
+}
+
 .messageLine {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 110px auto;

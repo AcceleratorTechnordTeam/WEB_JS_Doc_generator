@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import s from './App.module.css';
 import { HistoryPanel } from './components/HistoryPanel';
 import { JsonPanel, type Notice } from './components/JsonPanel';
-import { EndpointsTab, FunctionsTab, MessagesTab, ObjectsTab } from './components/ProjectTabs';
+import { EndpointsTab, FunctionsTab, MessagesTab, ObjectsTab, SqlTab } from './components/ProjectTabs';
 import w from './components/Workspace.module.css';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import {
@@ -24,11 +24,12 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'objects', label: 'Objets' },
   { value: 'functions', label: 'Fonctions' },
   { value: 'messages', label: 'Messages' },
+  { value: 'sql', label: 'SQL' },
 ];
 
 const reviveTab = (raw: unknown): Tab => (TABS.some((t) => t.value === raw) ? (raw as Tab) : 'endpoints');
 
-type ListKey = 'endpoints' | 'objects' | 'functions' | 'messages';
+type ListKey = 'endpoints' | 'objects' | 'functions' | 'messages' | 'sql';
 
 export default function App() {
   const [project, setProject] = useLocalStorage<ProjectDoc>('jsdocgen:project', migrateLegacy, reviveProject);
@@ -55,6 +56,7 @@ export default function App() {
       objects: project.objects.some((o) => validateObject(o.doc).some((i) => i.level === 'error')),
       functions: project.functions.some((x) => validate(x.doc).some((i) => i.level === 'error')),
       messages: project.messages.some((m) => !m.messageId.trim() || !m.message.trim()),
+      sql: project.sql.some((q) => !q.sqlId.trim() || !q.name.trim() || !q.sql.trim()),
     }),
     [project],
   );
@@ -105,7 +107,7 @@ export default function App() {
 
   const isEmpty =
     !project.title.trim() &&
-    project.endpoints.length + project.objects.length + project.functions.length + project.messages.length === 0;
+    project.endpoints.length + project.objects.length + project.functions.length + project.messages.length + project.sql.length === 0;
 
   const importFile = async (file: File) => {
     if (!isEmpty && !window.confirm(`Importer « ${file.name} » ? Le projet en cours sera remplacé (enregistre-le avant si besoin).`))
@@ -126,6 +128,7 @@ export default function App() {
     objects: project.objects.length,
     functions: project.functions.length,
     messages: project.messages.length,
+    sql: project.sql.length,
   };
 
   return (
@@ -133,7 +136,7 @@ export default function App() {
       <header className={s.header}>
         <div className={s.brand}>
           <h1 className={s.title}>Générateur de documentation</h1>
-          <span className={s.subtitle}>Endpoints · objets · TSDoc · messages → JSON</span>
+          <span className={s.subtitle}>Endpoints · objets · TSDoc · messages · SQL → JSON</span>
         </div>
         <div className={s.headerActions}>
           <button type="button" className={s.secondary} onClick={reset}>
@@ -210,6 +213,7 @@ export default function App() {
               />
             )}
             {tab === 'messages' && <MessagesTab messages={project.messages} update={updater('messages')} />}
+            {tab === 'sql' && <SqlTab queries={project.sql} update={updater('sql')} />}
           </div>
         </div>
 

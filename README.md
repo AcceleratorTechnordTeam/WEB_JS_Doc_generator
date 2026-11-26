@@ -8,6 +8,7 @@ Outil React + Vite qui décrit un projet et exporte un **JSON final** standardis
 - **Objets** — type TypeScript documenté en JSDoc (ou classe C# documentée en commentaires XML).
 - **Fonctions** — commentaire TSDoc, avec le type des paramètres et du retour (`@param {string} nom`, `@returns {string | null}`) quand il est renseigné (ou commentaires XML `///` en C#), copiable seul.
 - **Messages** — identifiant, type (`critical`, `error`, `warning`, `success`, `info`) et texte.
+- **SQL** — identifiant, nom, description et code SQL de chaque requête.
 
 Format du JSON exporté :
 
@@ -18,7 +19,8 @@ Format du JSON exporté :
                     "payload": { "assembly": "…", "action": "…", "configurations": [{}], "applyAll": true } }] },
     { "object": [{ "objectId": "Object 01", "objectName": "Activity", "description": "…", "objectType": "{isOngoing: boolean;}" }] },
     { "functions": [{ "functionId": "FF01", "functionName": "maFonction()", "language": "TypeScript", "doc": "/** … */" }] },
-    { "messages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] }
+    { "messages": [{ "messageId": "Message 01", "type": "error", "message": "…" }] },
+    { "sql": [{ "sqlId": "SQL01", "sqlName": "Activités en cours", "description": "…", "sqlCode": "SELECT …" }] }
 ]
 ```
 

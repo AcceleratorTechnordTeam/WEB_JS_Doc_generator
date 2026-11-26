@@ -15,6 +15,7 @@ const summary = ({ project: p }: SavedProject) =>
     p.objects.length && `${p.objects.length} obj.`,
     p.functions.length && `${p.functions.length} fn.`,
     p.messages.length && `${p.messages.length} msg.`,
+    p.sql?.length && `${p.sql.length} sql`,
   ]
     .filter(Boolean)
     .join(' · ') || 'vide';

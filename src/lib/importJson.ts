@@ -267,7 +267,7 @@ function parseFunctionDoc(src: string, lang: Lang): { doc: FunctionDoc; warning?
 
 /* ——— Projet ——— */
 
-const KNOWN_KEYS = new Set(['title', 'endpoint', 'endpoints', 'object', 'objects', 'functions', 'function', 'messages', 'mesages']);
+const KNOWN_KEYS = new Set(['title', 'endpoint', 'endpoints', 'object', 'objects', 'functions', 'function', 'messages', 'mesages', 'sql', 'queries']);
 
 export function parseProjectJson(text: string): ImportResult {
   let data: unknown;
@@ -369,7 +369,15 @@ export function parseProjectJson(text: string): ImportResult {
     message: str(m.message),
   }));
 
+  const sql = list(pick('sql', 'queries'), 'sql').map((q) => ({
+    id: uid(),
+    sqlId: str(q.sqlId ?? q.id),
+    name: str(q.sqlName ?? q.name),
+    description: str(q.description),
+    sql: str(q.sqlCode ?? q.code ?? q.sql),
+  }));
+
   // reviveProject normalise le tout (types de message, identifiants hérités…).
-  const project = reviveProject({ title: str(pick('title')), endpoints, objects, functions, messages });
+  const project = reviveProject({ title: str(pick('title')), endpoints, objects, functions, messages, sql });
   return { project, warnings };
 }

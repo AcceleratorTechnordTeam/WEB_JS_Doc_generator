@@ -15,6 +15,7 @@ import {
   newFunctionEntry,
   newMessage,
   newObjectEntry,
+  newSqlQuery,
 } from '../lib/project';
 import { validate, validateObject } from '../lib/validate';
 import type {
@@ -29,6 +30,7 @@ import type {
   MessageType,
   ObjectDoc,
   ObjectEntry,
+  SqlQueryDoc,
 } from '../types';
 import { DocForm } from './DocForm';
 import { RowActions, Section } from './Field';
@@ -244,6 +246,79 @@ export function MessagesTab({ messages, update }: { messages: MessageDoc[]; upda
                 onRemove={() => update((l) => removeItem(l, m.id))}
                 onUp={i > 0 ? () => update((l) => moveItem(l, m.id, -1)) : null}
                 onDown={i < messages.length - 1 ? () => update((l) => moveItem(l, m.id, 1)) : null}
+              />
+            </div>
+          );
+        })}
+      </Section>
+    </div>
+  );
+}
+
+/* ——— Requêtes SQL ——— */
+
+export function SqlTab({ queries, update }: { queries: SqlQueryDoc[]; update: ListUpdater<SqlQueryDoc> }) {
+  return (
+    <div className={f.form}>
+      <Section
+        title="Requêtes SQL"
+        count={queries.length}
+        onAdd={() => update((l) => [...l, newSqlQuery(l)])}
+        addLabel="Ajouter une requête SQL"
+      >
+        {queries.length === 0 && <p className={f.empty}>Aucune requête SQL.</p>}
+        {queries.map((q, i) => {
+          const label = `la requête ${q.name.trim() || q.sqlId || i + 1}`;
+          const patch = (v: Partial<SqlQueryDoc>) => update((l) => patchItem(l, q.id, v));
+          return (
+            <div key={q.id} className={w.sqlLine}>
+              <input
+                className={`${f.input} ${f.mono}`}
+                value={q.sqlId}
+                onChange={(ev) => patch({ sqlId: ev.target.value })}
+                placeholder="SQL01"
+                aria-label={`Identifiant de ${label}`}
+                {...code}
+              />
+              <input
+                className={f.input}
+                value={q.name}
+                onChange={(ev) => patch({ name: ev.target.value })}
+                placeholder="Nom de la requête"
+                aria-label={`Nom de ${label}`}
+                spellCheck={false}
+                autoComplete="off"
+              />
+              <RowActions
+                label={label}
+                onRemove={() => update((l) => removeItem(l, q.id))}
+                onUp={i > 0 ? () => update((l) => moveItem(l, q.id, -1)) : null}
+                onDown={i < queries.length - 1 ? () => update((l) => moveItem(l, q.id, 1)) : null}
+              />
+              <input
+                className={f.input}
+                value={q.description}
+                onChange={(ev) => patch({ description: ev.target.value })}
+                placeholder="Description — ce que renvoie la requête, quand l'utiliser…"
+                aria-label={`Description de ${label}`}
+              />
+              <textarea
+                className={`${f.textarea} ${f.mono} ${w.sqlCode}`}
+                value={q.sql}
+                onChange={(ev) => patch({ sql: ev.target.value })}
+                onKeyDown={(ev) => {
+                  // Tab insère une indentation au lieu de quitter le champ.
+                  if (ev.key !== 'Tab' || ev.shiftKey) return;
+                  ev.preventDefault();
+                  const el = ev.currentTarget;
+                  const { selectionStart: a, selectionEnd: b, value } = el;
+                  patch({ sql: `${value.slice(0, a)}    ${value.slice(b)}` });
+                  requestAnimationFrame(() => el.setSelectionRange(a + 4, a + 4));
+                }}
+                placeholder={'SELECT id, name\nFROM activity\nWHERE ongoing = 1;'}
+                rows={5}
+                aria-label={`Code SQL de ${label}`}
+                {...code}
               />
             </div>
           );

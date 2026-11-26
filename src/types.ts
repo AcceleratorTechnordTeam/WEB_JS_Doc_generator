@@ -96,6 +96,15 @@ export interface MessageDoc {
   message: string;
 }
 
+/** Requête SQL documentée : identifiant (« SQL01 »), nom, description et code. */
+export interface SqlQueryDoc {
+  id: string;
+  sqlId: string;
+  name: string;
+  description: string;
+  sql: string;
+}
+
 /** Objet du projet : identifiant métier (« Object 01 ») + sa définition. */
 export interface ObjectEntry {
   id: string;
@@ -117,6 +126,7 @@ export interface ProjectDoc {
   objects: ObjectEntry[];
   functions: FunctionEntry[];
   messages: MessageDoc[];
+  sql: SqlQueryDoc[];
 }
 
 export interface SavedProject {
@@ -125,7 +135,7 @@ export interface SavedProject {
   project: ProjectDoc;
 }
 
-export type Tab = 'endpoints' | 'objects' | 'functions' | 'messages';
+export type Tab = 'endpoints' | 'objects' | 'functions' | 'messages' | 'sql';
 
 export interface Issue {
   level: 'error' | 'warning';

@@ -10,6 +10,7 @@ import type {
   ObjectEntry,
   ProjectDoc,
   SavedProject,
+  SqlQueryDoc,
 } from '../types';
 import { generateComment } from './comment';
 import { emptyDoc, emptyObject, LANG_LABEL, reviveDoc, reviveObject } from './defaults';
@@ -19,7 +20,14 @@ import { validate, validateObject } from './validate';
 
 export const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-export const emptyProject = (): ProjectDoc => ({ title: '', endpoints: [], objects: [], functions: [], messages: [] });
+export const emptyProject = (): ProjectDoc => ({
+  title: '',
+  endpoints: [],
+  objects: [],
+  functions: [],
+  messages: [],
+  sql: [],
+});
 
 /* ——— Identifiants métier auto-incrémentés (modifiables ensuite) ——— */
 
@@ -134,6 +142,17 @@ function renameLegacyMessageIds(messages: MessageDoc[]): MessageDoc[] {
   });
 }
 
+export const newSqlQuery = (list: SqlQueryDoc[]): SqlQueryDoc => ({
+  id: uid(),
+  sqlId: nextId(
+    list.map((q) => q.sqlId),
+    (n) => `SQL${pad(n, 2)}`,
+  ),
+  name: '',
+  description: '',
+  sql: '',
+});
+
 export const newObjectEntry = (list: ObjectEntry[]): ObjectEntry => ({
   id: uid(),
   objectId: nextId(
@@ -230,6 +249,13 @@ export function reviveProject(raw: unknown): ProjectDoc {
         message: str(m.message),
       })),
     ),
+    sql: list(raw.sql).map((q) => ({
+      id: str(q.id) || uid(),
+      sqlId: str(q.sqlId),
+      name: str(q.name),
+      description: str(q.description),
+      sql: str(q.sql),
+    })),
   };
 }
 
@@ -286,7 +312,10 @@ export function migrateLegacy(): ProjectDoc {
 const objectType = (o: ObjectEntry) =>
   o.doc.lang === 'ts' ? generateTsTypeBody(o.doc) : generateCSharpClass(o.doc).trimEnd();
 
-/** JSON final : tableau de blocs à une clé, dans l'ordre titre → endpoints → objets → fonctions → messages. */
+/** Retire les lignes vides autour du code SQL, en gardant l'indentation intérieure. */
+const trimSql = (sql: string) => sql.replace(/^\s*\n/, '').trimEnd();
+
+/** JSON final : tableau de blocs à une clé, dans l'ordre titre → endpoints → objets → fonctions → messages → SQL. */
 export function generateProjectJson(p: ProjectDoc): string {
   const data = [
     { title: p.title.trim() },
@@ -327,6 +356,14 @@ export function generateProjectJson(p: ProjectDoc): string {
     {
       messages: p.messages.map((m) => ({ messageId: m.messageId.trim(), type: m.type, message: m.message.trim() })),
     },
+    {
+      sql: p.sql.map((q) => ({
+        sqlId: q.sqlId.trim(),
+        sqlName: q.name.trim(),
+        description: q.description.trim(),
+        sqlCode: trimSql(q.sql),
+      })),
+    },
   ];
   return JSON.stringify(data, null, 4) + '\n';
 }
@@ -361,6 +398,14 @@ export function validateProject(p: ProjectDoc): Issue[] {
     if (!m.message.trim()) error(`Le message ${label} est vide.`);
   });
 
+  p.sql.forEach((q, i) => {
+    const label = q.sqlId.trim() || `n°${i + 1}`;
+    if (!q.sqlId.trim()) error(`La requête SQL n°${i + 1} n'a pas d'identifiant.`);
+    if (!q.name.trim()) error(`La requête SQL ${label} n'a pas de nom.`);
+    if (!q.description.trim()) warn(`La requête SQL ${label} n'a pas de description.`);
+    if (!q.sql.trim()) error(`La requête SQL ${label} n'a pas de code.`);
+  });
+
   // Les erreurs détaillées d'un objet / d'une fonction sont dans son onglet : ici, un résumé.
   p.objects.forEach((o, i) => {
     const n = validateObject(o.doc).filter((x) => x.level === 'error').length;
@@ -376,11 +421,12 @@ export function validateProject(p: ProjectDoc): Issue[] {
     ['objet', p.objects.map((o) => o.objectId)],
     ['fonction', p.functions.map((f) => f.functionId)],
     ['message', p.messages.map((m) => m.messageId)],
+    ['requête SQL', p.sql.map((q) => q.sqlId)],
   ] as const) {
     for (const d of duplicates(values)) error(`Identifiant de ${label} en double : « ${d} ».`);
   }
 
-  const total = p.endpoints.length + p.objects.length + p.functions.length + p.messages.length;
+  const total = p.endpoints.length + p.objects.length + p.functions.length + p.messages.length + p.sql.length;
   if (p.title.trim() && total === 0) warn('Le projet ne contient encore aucun élément.');
 
   return issues;
